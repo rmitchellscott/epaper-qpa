@@ -5,11 +5,11 @@ CONFIG += plugin
 CONFIG += qpa/genericunixfontdatabase c++17
 QT += core-private gui-private input_support-private
 
-qtHaveModule(fontdatabase_support-private) {
-    QT += fontdatabase_support-private 
+equals(QT_MAJOR_VERSION, 5) {
+   QT += fontdatabase_support-private eventdispatcher_support-private
 }
-qtHaveModule(eventdispatcher_support-private) {
-    QT += eventdispatcher_support-private
+greaterThan(QT_MAJOR_VERSION, 6) {
+   QT += gui-private
 }
 
 SOURCES =   main.cpp \
