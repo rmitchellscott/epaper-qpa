@@ -531,6 +531,12 @@ EpaperEvdevKeyboardHandler::KeycodeAction EpaperEvdevKeyboardHandler::processKey
                     qtcode = Qt::Key_Delete;
                     break;
                 }
+            } else if (hadSpecificMappingWithModifiers && (qtmods & (Qt::ControlModifier | Qt::AltModifier | Qt::MetaModifier))) {
+                // Exclude the text value from an event when a modifier combo is pressed that doesn't
+                // specifically produce an alternate character.  At higher levels any key combo that
+                // triggers a shortcut won't type anything so the exclusion makes things more
+                // consistent.
+                unicode = 0xffff;
             }
 
             // Map SHIFT + Tab to SHIFT + Backtab, QShortcutMap knows about this translation
