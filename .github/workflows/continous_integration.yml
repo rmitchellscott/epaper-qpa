@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        qt: ["5.15.2", "6.4.2"]
+        qt: ["5.15.2", "6.5.2"]
         buildsystem: ["qmake"]
         include:
-          - qt: "6.4.2"
+          - qt: "6.5.2"
             buildsystem: "cmake"
 
     steps:
