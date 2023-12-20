@@ -32,7 +32,7 @@ HEADERS += \
     map/epaperevdevkeyboardmap_uk.h \
     map/epaperevdevkeyboardmap_us_rm.h \
 
-OTHER_FILES += minimal.json
+OTHER_FILES += epaper.json
 
 target.path += $$[QT_INSTALL_PLUGINS]/platforms
 INSTALLS += target

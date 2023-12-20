@@ -11,7 +11,12 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        qt: ["5.15.2", "6.4.2"]
+        qt: ["5.15.2", "6.5.2"]
+        buildsystem: ["qmake"]
+        include:
+          - qt: "6.5.2"
+            buildsystem: "cmake"
+
     steps:
       - uses: actions/checkout@v3
 
@@ -22,8 +27,14 @@ jobs:
 
       - run: sudo apt install -y libxkbcommon-x11-dev
 
-      - name: Run qmake
-        run: qmake
+      - name: Build with qmake
+        if: matrix.buildsystem == 'qmake'
+        run: |
+          qmake
+          make
 
-      - name: Build
-        run: make
+      - name: Build with cmake
+        if: matrix.buildsystem == 'cmake'
+        run: |
+          cmake -S . -Bbuild
+          cmake --build build
