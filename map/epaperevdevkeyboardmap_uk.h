@@ -75,7 +75,6 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_1, 0x0031, Qt::Key_1, 0x00, 0x00, 0x0000 },
     { KEY_1, 0x0021, Qt::Key_Exclam, Modifiers::ModShift, 0x00, 0x0000 },
 
-
     // KEY_2 (3)
     // "2" Digit Two 0x0032
     // """ Quotation Mark 0x0022
@@ -155,22 +154,18 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { 12, 0x005F, 0x0400005F, 0x05, 0x00, 0x0000 },
 
     // KEY_EQUAL (13)
-    // "-" Hyphen-Minus 0x002d
-    // "_" Low Line 0x005f
     // "=" Equals Sign 0x003d
-    { KEY_EQUAL, 0x002d, Qt::Key_Minus, 0x00, 0x00, 0x0000 },
-    { KEY_EQUAL, 0x005f, Qt::Key_Underscore, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_EQUAL, 0x003d, Qt::Key_Equal, Modifiers::ModAlt, 0x00, 0x0000 },
-    { KEY_EQUAL, 0x003d, Qt::Key_Equal, Modifiers::ModAltGr, 0x00, 0x0000 },
-    { KEY_EQUAL, 0x003d, Qt::Key_Equal, Modifiers::ModShift | Modifiers::ModAlt, 0x00, 0x0000 },
-    { KEY_EQUAL, 0x003d, Qt::Key_Equal, Modifiers::ModShift | Modifiers::ModAltGr, 0x00, 0x0000 },
+    // "+" Plus Sign 0x002b
+    { KEY_EQUAL, 0x003d, Qt::Key_Equal, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_EQUAL, 0x002b, Qt::Key_Plus, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_BACKSPACE (14)
     { KEY_BACKSPACE, 0xffff, Qt::Key_Backspace, 0x00, 0x00, 0x0000 },
     { KEY_BACKSPACE, 0xffff, Qt::Key_Delete, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_TAB (15)
-    { KEY_TAB, 0xffff, 0x01000001, 0x00, 0x00, 0x0000 },
+    // "	" Horizontal Tabulation 0x0009
+    { KEY_TAB, 0x0009, Qt::Key_Tab, Modifiers::ModPlain, 0x00, 0x0000 },
 
     // KEY_Q (16)
     { KEY_Q, 0x0071, 0x00000051, 0x00, 0x02, 0x0000 },
@@ -212,10 +207,14 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_P, 0x0070, 0x00000050, 0x00, 0x02, 0x0000 },
     { KEY_P, 0x0050, 0x00000050, 0x01, 0x02, 0x0000 },
 
-    // Non-existent (26, 27)
+    // KEY_LEFTBRACE (26)
+    // "[" Left Square Bracket 0x005b
+    // "{" Left Curly Bracket 0x007b
     { KEY_LEFTBRACE, 0x005b, 0x0000005b, 0x00, 0x00, 0x0000 },
     { KEY_LEFTBRACE, 0x007b, 0x0000007b, 0x01, 0x00, 0x0000 },
-    { KEY_LEFTBRACE, 0xffff, 0x01000000, 0x04, 0x00, 0x0000 },
+    { KEY_LEFTBRACE, 0xffff, 0x01000000, 0x02, 0x00, 0x0000 },
+
+    // Non-existent (27)
     { KEY_RIGHTBRACE, 0x005d, 0x0000005d, 0x00, 0x00, 0x0000 },
     { KEY_RIGHTBRACE, 0x007d, 0x0000007d, 0x01, 0x00, 0x0000 },
     { KEY_RIGHTBRACE, 0x007e, 0x0000007e, 0x02, 0x00, 0x0000 },
@@ -280,7 +279,7 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_SEMICOLON, 0x003a, Qt::Key_Colon, 0x0b, 0x02, 0x0000 },
     { KEY_SEMICOLON, 0x003b, Qt::Key_Semicolon, 0x0c, 0x02, 0x0000 },
     { KEY_SEMICOLON, 0x003a, Qt::Key_Colon, 0x0d, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003b, Qt::Key_Semicolon,  0x0e, 0x02, 0x0000 },
+    { KEY_SEMICOLON, 0x003b, Qt::Key_Semicolon, 0x0e, 0x02, 0x0000 },
     { KEY_SEMICOLON, 0x003a, Qt::Key_Colon, 0x0f, 0x02, 0x0000 },
 
     // KEY_APOSTROPHE (40)
@@ -290,26 +289,18 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_APOSTROPHE, 0x0040, Qt::Key_At, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_GRAVE (41)
-    // "`" Grave Accent 0x0060
-    // "´" Acute Accent 0x00b4
-    // "¨" Combining Diaeresis 0x0308
-    { KEY_GRAVE, 0x0060, Qt::Key_Dead_Grave, 0x00, Flags::IsDead, 0x0000 },
-    { KEY_GRAVE, 0x00b4, Qt::Key_Dead_Acute, Modifiers::ModShift, Flags::IsDead, 0x0000 },
-    { KEY_GRAVE, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModAlt, Flags::IsDead, 0x0000 },
-    { KEY_GRAVE, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
-    { KEY_GRAVE, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModShift | Modifiers::ModAlt, Flags::IsDead, 0x0000 },
-    { KEY_GRAVE, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModShift | Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
+    // "]" Right Square Bracket 0x005d
+    // " }" Right Curly Bracket 0x007d
+    { KEY_GRAVE, 0x005d, Qt::Key_BracketRight, 0x00, 0x00, 0x0000 },
+    { KEY_GRAVE, 0x007d, Qt::Key_BraceRight, Modifiers::ModShift, 0x00, 0x0000 },
 
     { KEY_LEFTSHIFT, 0xffff, 0x01000020, 0x00, 0x04, 0x0001 },
 
     // KEY_BACKSLASH (43)
-    // This key only exists on the US physical layout.
-    // We implement the characters printed on the keys again
-    // in case user selects UK locale on a US keyboard.
-    // "̃ " Combining Tilde 0x0303
-    // "¨" Combining Diaeresis 0x0308
-    { KEY_BACKSLASH, 0x0303, Qt::Key_Dead_Tilde, 0x00, Flags::IsDead, 0x0000 },
-    { KEY_BACKSLASH, 0x0308, Qt::Key_Dead_Diaeresis, 0x01, Flags::IsDead, 0x0000 },
+    // "|" Vertical Line 0x007c
+    // "ç" Latin Small Letter C with Cedilla 0x00e7
+    { KEY_BACKSLASH, 0x007c, Qt::Key_Bar, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_BACKSLASH, 0x00e7, Qt::Key_Ccedilla, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_Z (44)
     { KEY_Z, 0x007a, 0x0000005a, 0x00, 0x02, 0x0000 },
