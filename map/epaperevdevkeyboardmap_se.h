@@ -516,6 +516,9 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { 111, 0xffff, 0x01000000, 0x06, 0x08, 0x0200 },
     { 111, 0xffff, 0x01000000, 0x0c, 0x08, 0x0200 },
 
+    // The FunKey on Condor (126)
+    { KEY_RIGHTMETA, 0xffff, Qt::Key_Super_R, 0x00, 0x00, 0x0000 },
+
     // 113 -> 248
     { KEY_MUTE, 0xffff, Qt::Key_VolumeMute, 0x00, 0x00, 0x0000 },
     { KEY_VOLUMEDOWN, 0xffff, Qt::Key_VolumeDown, 0x00, 0x00, 0x0000 },
