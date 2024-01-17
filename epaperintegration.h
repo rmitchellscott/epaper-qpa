@@ -46,20 +46,20 @@ class EpaperScreen : public QPlatformScreen
 {
 public:
     EpaperScreen() :
-        mDepth(32), mFormat(QImage::Format_ARGB32_Premultiplied) { }
+        mDepth(32), mDpi(228), mFormat(QImage::Format_ARGB32_Premultiplied) { }
 
     QRect geometry() const override { return mGeometry; }
     int depth() const override { return mDepth; }
     QImage::Format format() const override { return mFormat; }
     QSizeF physicalSize() const override
     {
-        static const int dpi = 228;
-        return QSizeF(geometry().size()) / dpi * qreal(25.4);
+        return QSizeF(geometry().size()) / mDpi * qreal(25.4);
     }
 
 public:
     QRect mGeometry;
     int mDepth;
+    int mDpi;
     QImage::Format mFormat;
     QSize mPhysicalSize;
 };
@@ -88,6 +88,15 @@ public:
     static EpaperIntegration *instance();
 
 private:
+    struct DisplayInfo
+    {
+        int height;
+        int width;
+        int dpi;
+    };
+
+    static DisplayInfo readDisplayInfo();
+    static int32_t readDisplayInfoBinaryFile(const QString& path);
     static void seabirdConnectionChangedStatic();
     static void seabirdCapsLockEnableStatic();
     static void seabirdCapsLockDisableStatic();

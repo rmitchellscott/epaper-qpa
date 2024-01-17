@@ -46,6 +46,9 @@
 #include <private/qgenericunixeventdispatcher_p.h>
 #include <private/qgenericunixfontdatabase_p.h>
 
+#include <QFile>
+#include <QtEndian>
+
 QT_BEGIN_NAMESPACE
 
 EpaperIntegration::EpaperIntegration(const QStringList &parameters) :
@@ -55,12 +58,15 @@ EpaperIntegration::EpaperIntegration(const QStringList &parameters) :
     m_inputContext(0)
 {
     Q_UNUSED(parameters);
+
+    DisplayInfo info = readDisplayInfo();
     EpaperScreen *mPrimaryScreen = new EpaperScreen();
 
-    mPrimaryScreen->mGeometry = QRect(0, 0, 1404, 1872);
+    mPrimaryScreen->mGeometry = QRect(0, 0, info.width, info.height);
 
     mPrimaryScreen->mDepth = 32;
-    mPrimaryScreen->mFormat = QImage::Format_RGB16;
+    mPrimaryScreen->mFormat = QImage::Format_RGB32;
+    mPrimaryScreen->mDpi = info.dpi;
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 13, 0))
     QWindowSystemInterface::handleScreenAdded(mPrimaryScreen);
 #else
@@ -144,6 +150,40 @@ QFunctionPointer EpaperIntegration::platformFunction(const QByteArray &function)
     }
 
     return nullptr;
+}
+
+int32_t EpaperIntegration::readDisplayInfoBinaryFile(const QString& path)
+{
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly)) {
+        qDebug() << "Could not open bin file for reading";
+        return -1;
+    }
+
+    QByteArray bytes = file.readAll();
+    file.close();
+
+    if (bytes.size() != 4)
+        return -1;
+
+    return qFromBigEndian<int32_t>(bytes);
+}
+
+EpaperIntegration::DisplayInfo EpaperIntegration::readDisplayInfo()
+{
+    const QStringList paths{"/sys/firmware/devicetree/base/display-info/display-height",
+                            "/sys/firmware/devicetree/base/display-info/display-width",
+                            "/sys/firmware/devicetree/base/display-info/display-dpi"};
+
+    QList<int32_t> values;
+    for (const auto &i : paths)
+        values.append(readDisplayInfoBinaryFile(i));
+
+    /* Fallback to default values */
+    if(values.contains(-1))
+        return DisplayInfo{1872, 1404, 228};
+
+    return DisplayInfo{values.at(0), values.at(1), values.at(2)};
 }
 
 void EpaperIntegration::seabirdConnectionChangedStatic()
