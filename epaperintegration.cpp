@@ -57,7 +57,7 @@ EpaperIntegration::EpaperIntegration(const QStringList &parameters) :
     Q_UNUSED(parameters);
     EpaperScreen *mPrimaryScreen = new EpaperScreen();
 
-    mPrimaryScreen->mGeometry = QRect(0, 0, 1620, 2160);
+    mPrimaryScreen->mGeometry = QRect(0, 0, 1404, 1872);
 
     mPrimaryScreen->mDepth = 32;
     mPrimaryScreen->mFormat = QImage::Format_RGB16;
