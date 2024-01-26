@@ -126,42 +126,26 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     // KEY_9 (10)
     // "9" Digit Nine 0x0039
     // ")" Right Parenthesis 0x0029
-    // "^" Combining Circumflex Accent 0x0302
     { KEY_9, 0x0039, Qt::Key_9, 0x00, 0x00, 0x0000 },
     { KEY_9, 0x0029, Qt::Key_ParenRight, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_9, 0x0302, Qt::Key_Dead_Circumflex, Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
-    { KEY_9, 0x0302, Qt::Key_Dead_Circumflex, Modifiers::ModAlt, Flags::IsDead, 0x0000 },
-    { KEY_9, 0x0302, Qt::Key_Dead_Circumflex, Modifiers::ModShift | Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
-    { KEY_9, 0x0302, Qt::Key_Dead_Circumflex, Modifiers::ModShift | Modifiers::ModAlt, Flags::IsDead, 0x0000 },
 
     // KEY_0 (11)
     // "0" Digit Zero 0x0030
     // "=" Equals Sign 0x003d
-    // "`" Grave Accent 0x0060
     { KEY_0, 0x0030, Qt::Key_0, 0x00, 0x00, 0x0000 },
     { KEY_0, 0x003d, Qt::Key_Equal, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_0, 0x0060, Qt::Key_Dead_Grave, Modifiers::ModAlt, Flags::IsDead, 0x0000 },
-    { KEY_0, 0x0060, Qt::Key_Dead_Grave, Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
-    { KEY_0, 0x0060, Qt::Key_Dead_Grave, Modifiers::ModShift | Modifiers::ModAlt, Flags::IsDead, 0x0000 },
-    { KEY_0, 0x0060, Qt::Key_Dead_Grave, Modifiers::ModShift | Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
 
-    // Keycode 12 non-existent on Seabird.
-    { 12, 0x002d, 0x0000002d, 0x00, 0x00, 0x0000 },
-    { 12, 0x005f, 0x0000005f, 0x01, 0x00, 0x0000 },
-    { 12, 0x005c, 0x0000005c, 0x02, 0x00, 0x0000 },
-    { 12, 0x005f, 0x0400005f, 0x04, 0x00, 0x0000 },
-    { 12, 0x005f, 0x0400005f, 0x05, 0x00, 0x0000 },
-
-    // KEY_EQUAL (13)
+    // KEY_MINUS (12)
     // "+" Plus Sign 0x002b
     // "?" Question Mark 0x003f
+    { KEY_MINUS, 0x002b, Qt::Key_Plus, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_MINUS, 0x003f, Qt::Key_Question, Modifiers::ModShift, 0x00, 0x0000 },
+
+    // KEY_EQUAL (13)
     // "´" Acute Accent 0x00b4
-    { KEY_EQUAL, 0x002b, Qt::Key_Plus, 0x00, 0x00, 0x0000 },
-    { KEY_EQUAL, 0x003f, Qt::Key_Question, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_EQUAL, 0x00b4, Qt::Key_Dead_Acute, Modifiers::ModAlt, Flags::IsDead, 0x0000 },
-    { KEY_EQUAL, 0x00b4, Qt::Key_Dead_Acute, Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
-    { KEY_EQUAL, 0x00b4, Qt::Key_Dead_Acute, Modifiers::ModShift | Modifiers::ModAlt, Flags::IsDead, 0x0000 },
-    { KEY_EQUAL, 0x00b4, Qt::Key_Dead_Acute, Modifiers::ModShift | Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
+    // "`" Grave Accent 0x0060
+    { KEY_EQUAL, 0x00b4, Qt::Key_Dead_Acute, Modifiers::ModPlain, Flags::IsDead, 0x0000 },
+    { KEY_EQUAL, 0x0060, Qt::Key_Dead_Grave, Modifiers::ModShift, Flags::IsDead, 0x0000 },
 
     // KEY_BACKSPACE (14)
     { KEY_BACKSPACE, 0xffff, Qt::Key_Backspace, 0x00, 0x00, 0x0000 },
@@ -210,10 +194,13 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_P, 0x0070, 0x00000050, 0x00, 0x02, 0x0000 },
     { KEY_P, 0x0050, 0x00000050, 0x01, 0x02, 0x0000 },
 
-    // Non-existent (26, 27)
-    { KEY_LEFTBRACE, 0x005b, 0x0000005b, 0x00, 0x00, 0x0000 },
-    { KEY_LEFTBRACE, 0x007b, 0x0000007b, 0x01, 0x00, 0x0000 },
-    { KEY_LEFTBRACE, 0xffff, 0x01000000, 0x04, 0x00, 0x0000 },
+    // KEY_LEFTBRACE (26)
+    // "å" Latin Small Letter a with Ring Above 0x00e5
+    // "Å" Latin Capital Letter a with Ring Above 0x00c5
+    { KEY_LEFTBRACE, 0x00e5, Qt::Key_Aring, Modifiers::ModPlain, Flags::IsLetter, 0x0000 },
+    { KEY_LEFTBRACE, 0x00c5, Qt::Key_Aring, Modifiers::ModShift, Flags::IsLetter, 0x0000 },
+
+    // Non-existent (27)
     { KEY_RIGHTBRACE, 0x005d, 0x0000005d, 0x00, 0x00, 0x0000 },
     { KEY_RIGHTBRACE, 0x007d, 0x0000007d, 0x01, 0x00, 0x0000 },
     { KEY_RIGHTBRACE, 0x007e, 0x0000007e, 0x02, 0x00, 0x0000 },
@@ -282,68 +269,38 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_APOSTROPHE, 0x0027, Qt::Key_Apostrophe, Modifiers::ModAltGr, 0x00, 0x0000 },
 
     // KEY_GRAVE (41)
-    // "å" Latin Small Letter a with Ring Above 0x00e5
-    // "Å" Latin Capital Letter a with Ring Above 0x00c5
     // "¨" Combining Diaeresis 0x0308
-    { KEY_GRAVE, 0x00e5, Qt::Key_Aring, 0x00, Flags::IsLetter, 0x0000 },
-    { KEY_GRAVE, 0x00c5, Qt::Key_Aring, Modifiers::ModShift, Flags::IsLetter, 0x0000 },
-    { KEY_GRAVE, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
-    { KEY_GRAVE, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModAlt, Flags::IsDead, 0x0000 },
-    { KEY_GRAVE, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModShift | Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
-    { KEY_GRAVE, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModShift | Modifiers::ModAlt, Flags::IsDead, 0x0000 },
+    // "^" Combining Circumflex Accent 0x0302
+    { KEY_GRAVE, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModPlain, Flags::IsDead, 0x0000 },
+    { KEY_GRAVE, 0x0302, Qt::Key_Dead_Circumflex, Modifiers::ModShift, Flags::IsDead, 0x0000 },
 
     { KEY_LEFTSHIFT, 0xffff, 0x01000020, 0x00, 0x04, 0x0001 },
 
     // KEY_BACKSLASH (43)
-    // This key only exists on the US physical layout.
-    // We implement the characters printed on the keys again
-    // in case user selects Swedish locale on a US keyboard.
-    // "̃ " Combining Tilde 0x0303
-    // "¨" Combining Diaeresis 0x0308
-    { KEY_BACKSLASH, 0x0303, Qt::Key_Dead_Tilde, 0x00, Flags::IsDead, 0x0000 },
-    { KEY_BACKSLASH, 0x0308, Qt::Key_Dead_Diaeresis, 0x01, Flags::IsDead, 0x0000 },
+    // "<" Less-Than Sign 0x003c
+    // ">" Greater-Than Sign 0x003e
+    { KEY_BACKSLASH, 0x003c, Qt::Key_Less, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_BACKSLASH, 0x003e, Qt::Key_Greater, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_Z (44)
     // "z" 0x007a
     // "Z" 0x005a
-    // "<" Less-Than Sign 0x003c
     { KEY_Z, 0x007a, Qt::Key_Z, 0x00, Flags::IsLetter, 0x0000 },
     { KEY_Z, 0x005a, Qt::Key_Z, 0x01, Flags::IsLetter, 0x0000 },
-    { KEY_Z, 0x003c, Qt::Key_Less, 0x02, 0x00, 0x0000 },
-    { KEY_Z, 0x003c, Qt::Key_Less, 0x03, 0x00, 0x0000 },
     { KEY_Z, 0x007a, Qt::Key_Z | 0x04000000, 0x04, 0x00, 0x0000 },
     { KEY_Z, 0x005a, Qt::Key_Z | 0x06000000, 0x05, 0x00, 0x0000 },
     { KEY_Z, 0x007a, Qt::Key_Z | 0x0c000000, 0x06, 0x00, 0x0000 },
     { KEY_Z, 0x005a, Qt::Key_Z | 0x0d000000, 0x07, 0x00, 0x0000 },
-    { KEY_Z, 0x003c, Qt::Key_Less, 0x08, 0x00, 0x0000 },
-    { KEY_Z, 0x003c, Qt::Key_Less, 0x09, 0x00, 0x0000 },
-    { KEY_Z, 0x003c, Qt::Key_Less, 0x0a, 0x00, 0x0000 },
-    { KEY_Z, 0x003c, Qt::Key_Less, 0x0b, 0x00, 0x0000 },
-    { KEY_Z, 0x003c, Qt::Key_Less, 0x0c, 0x00, 0x0000 },
-    { KEY_Z, 0x003c, Qt::Key_Less, 0x0d, 0x00, 0x0000 },
-    { KEY_Z, 0x003c, Qt::Key_Less, 0x0e, 0x00, 0x0000 },
-    { KEY_Z, 0x003c, Qt::Key_Less, 0x0f, 0x00, 0x0000 },
 
     // KEY_X (45)
     // "x" 0x0078
     // "X" 0x0058
-    // ">" Greater-Than Sign 0x003e
     { KEY_X, 0x0078, Qt::Key_X, 0x00, Flags::IsLetter, 0x0000 },
     { KEY_X, 0x0058, Qt::Key_X, 0x01, Flags::IsLetter, 0x0000 },
-    { KEY_X, 0x003e, Qt::Key_Greater, 0x02, 0x00, 0x0000 },
-    { KEY_X, 0x003e, Qt::Key_Greater, 0x03, 0x00, 0x0000 },
     { KEY_X, 0x0078, Qt::Key_X | 0x04000000, 0x04, 0x00, 0x0000 },
     { KEY_X, 0x0058, Qt::Key_X | 0x06000000, 0x05, 0x00, 0x0000 },
     { KEY_X, 0x0078, Qt::Key_X | 0x0c000000, 0x06, 0x00, 0x0000 },
     { KEY_X, 0x0058, Qt::Key_X | 0x0d000000, 0x07, 0x00, 0x0000 },
-    { KEY_X, 0x003e, Qt::Key_Greater, 0x08, 0x00, 0x0000 },
-    { KEY_X, 0x003e, Qt::Key_Greater, 0x09, 0x00, 0x0000 },
-    { KEY_X, 0x003e, Qt::Key_Greater, 0x0a, 0x00, 0x0000 },
-    { KEY_X, 0x003e, Qt::Key_Greater, 0x0b, 0x00, 0x0000 },
-    { KEY_X, 0x003e, Qt::Key_Greater, 0x0c, 0x00, 0x0000 },
-    { KEY_X, 0x003e, Qt::Key_Greater, 0x0d, 0x00, 0x0000 },
-    { KEY_X, 0x003e, Qt::Key_Greater, 0x0e, 0x00, 0x0000 },
-    { KEY_X, 0x003e, Qt::Key_Greater, 0x0f, 0x00, 0x0000 },
 
     // KEY_C (46)
     { KEY_C, 0x0063, 0x00000043, 0x00, 0x02, 0x0000 },
