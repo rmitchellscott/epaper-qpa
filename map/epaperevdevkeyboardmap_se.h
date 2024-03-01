@@ -200,11 +200,11 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_LEFTBRACE, 0x00e5, Qt::Key_Aring, Modifiers::ModPlain, Flags::IsLetter, 0x0000 },
     { KEY_LEFTBRACE, 0x00c5, Qt::Key_Aring, Modifiers::ModShift, Flags::IsLetter, 0x0000 },
 
-    // Non-existent (27)
-    { KEY_RIGHTBRACE, 0x005d, 0x0000005d, 0x00, 0x00, 0x0000 },
-    { KEY_RIGHTBRACE, 0x007d, 0x0000007d, 0x01, 0x00, 0x0000 },
-    { KEY_RIGHTBRACE, 0x007e, 0x0000007e, 0x02, 0x00, 0x0000 },
-    { KEY_RIGHTBRACE, 0x005d, 0x0400005d, 0x04, 0x00, 0x0000 },
+    // KEY_RIGHTBRACE (27)
+    // "¨" Combining Diaeresis 0x0308
+    // "^" Combining Circumflex Accent 0x0302
+    { KEY_RIGHTBRACE, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModPlain, Flags::IsDead, 0x0000 },
+    { KEY_RIGHTBRACE, 0x0302, Qt::Key_Dead_Circumflex, Modifiers::ModShift, Flags::IsDead, 0x0000 },
 
     // KEY_ENTER (28)
     { KEY_ENTER, 0xffff, 0x01000004, 0x00, 0x00, 0x0000 },
@@ -251,28 +251,20 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     // KEY_SEMICOLON (39)
     // "ö" Latin Small Letter O with Diaeresis 0x00f6
     // "Ö" Latin Capital Letter O with Diaeresis 0x00d6
-    // "*" Asterisk 0x002a
     { KEY_SEMICOLON, 0x00f6, Qt::Key_Odiaeresis, Modifiers::ModPlain, Flags::IsLetter, 0x0000 },
     { KEY_SEMICOLON, 0x00d6, Qt::Key_Odiaeresis, Modifiers::ModShift, Flags::IsLetter, 0x0000 },
-    { KEY_SEMICOLON, 0x002a, Qt::Key_Asterisk, Modifiers::ModAlt, 0x00, 0x0000 },
-    { KEY_SEMICOLON, 0x002a, Qt::Key_Asterisk, Modifiers::ModAltGr, 0x00, 0x0000 },
-    { KEY_SEMICOLON, 0x002a, Qt::Key_Asterisk, Modifiers::ModShift | Modifiers::ModAlt, 0x00, 0x0000 },
-    { KEY_SEMICOLON, 0x002a, Qt::Key_Asterisk, Modifiers::ModShift | Modifiers::ModAltGr, 0x00, 0x0000 },
 
     // KEY_APOSTROPHE (40)
     // "ä" Latin Small Letter a with Diaeresis 0x00e4
     // "Ä" Latin Capital Letter a with Diaeresis 0x00c4
-    // "'" Apostrophe 0x0027
     { KEY_APOSTROPHE, 0x00e4, Qt::Key_Adiaeresis, Modifiers::ModPlain, Flags::IsLetter, 0x0000 },
     { KEY_APOSTROPHE, 0x00c4, Qt::Key_Adiaeresis, Modifiers::ModShift, Flags::IsLetter, 0x0000 },
-    { KEY_APOSTROPHE, 0x0027, Qt::Key_Apostrophe, Modifiers::ModAlt, 0x00, 0x0000 },
-    { KEY_APOSTROPHE, 0x0027, Qt::Key_Apostrophe, Modifiers::ModAltGr, 0x00, 0x0000 },
 
     // KEY_GRAVE (41)
-    // "¨" Combining Diaeresis 0x0308
-    // "^" Combining Circumflex Accent 0x0302
-    { KEY_GRAVE, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModPlain, Flags::IsDead, 0x0000 },
-    { KEY_GRAVE, 0x0302, Qt::Key_Dead_Circumflex, Modifiers::ModShift, Flags::IsDead, 0x0000 },
+    // "'" Apostrophe 0x0027
+    // "*" Asterisk 0x002a
+    { KEY_GRAVE, 0x0027, Qt::Key_Apostrophe, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_GRAVE, 0x002a, Qt::Key_Asterisk, Modifiers::ModShift, 0x00, 0x0000 },
 
     { KEY_LEFTSHIFT, 0xffff, 0x01000020, 0x00, 0x04, 0x0001 },
 
