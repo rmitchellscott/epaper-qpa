@@ -84,11 +84,8 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     // KEY_3 (4)
     // "3" Digit Three 0x0033
     // "£" Pound Sign 0x00a3
-    // "#" Number Sign 0x0023
     { KEY_3, 0x0033, Qt::Key_3, 0x00, 0x00, 0x0000 },
     { KEY_3, 0x00a3, Qt::Key_sterling, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_3, 0x0023, Qt::Key_NumberSign, Modifiers::ModAlt, 0x00, 0x0000 },
-    { KEY_3, 0x0023, Qt::Key_NumberSign, Modifiers::ModAltGr, 0x00, 0x0000 },
 
     // KEY_4 (5)
     // "4" Digit Four 0x0034
@@ -127,13 +124,8 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     // KEY_9 (10)
     // "9" Digit Nine 0x0039
     // "(" Left Parenthesis 0x0028
-    // "̃ " Combining Tilde 0x0303
     { KEY_9, 0x0039, Qt::Key_9, 0x00, 0x02, 0x0000 },
     { KEY_9, 0x0028, Qt::Key_ParenLeft, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_9, 0x0303, Qt::Key_Dead_Tilde, Modifiers::ModAlt, Flags::IsDead, 0x0000 },
-    { KEY_9, 0x0303, Qt::Key_Dead_Tilde, Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
-    { KEY_9, 0x0303, Qt::Key_Dead_Tilde, Modifiers::ModShift | Modifiers::ModAlt, Flags::IsDead, 0x0000 },
-    { KEY_9, 0x0303, Qt::Key_Dead_Tilde, Modifiers::ModShift | Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
 
     // KEY_0 (11)
     // "0" Digit Zero 0x0030
@@ -210,15 +202,14 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     // KEY_LEFTBRACE (26)
     // "[" Left Square Bracket 0x005b
     // "{" Left Curly Bracket 0x007b
-    { KEY_LEFTBRACE, 0x005b, 0x0000005b, 0x00, 0x00, 0x0000 },
-    { KEY_LEFTBRACE, 0x007b, 0x0000007b, 0x01, 0x00, 0x0000 },
-    { KEY_LEFTBRACE, 0xffff, 0x01000000, 0x02, 0x00, 0x0000 },
+    { KEY_LEFTBRACE, 0x005b, Qt::Key_BracketLeft, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_LEFTBRACE, 0x007b, Qt::Key_BraceLeft, Modifiers::ModShift, 0x00, 0x0000 },
 
-    // Non-existent (27)
-    { KEY_RIGHTBRACE, 0x005d, 0x0000005d, 0x00, 0x00, 0x0000 },
-    { KEY_RIGHTBRACE, 0x007d, 0x0000007d, 0x01, 0x00, 0x0000 },
-    { KEY_RIGHTBRACE, 0x007e, 0x0000007e, 0x02, 0x00, 0x0000 },
-    { KEY_RIGHTBRACE, 0x005d, 0x0400005d, 0x04, 0x00, 0x0000 },
+    // KEY_RIGHTBRACE (27)
+    // "]" Right Square Bracket 0x005d
+    // "}" Right Curly Bracket 0x007d
+    { KEY_RIGHTBRACE, 0x005d, Qt::Key_BracketRight, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_RIGHTBRACE, 0x007d, Qt::Key_BraceRight, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_ENTER (28)
     { KEY_ENTER, 0xffff, 0x01000004, 0x00, 0x00, 0x0000 },
@@ -289,10 +280,10 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_APOSTROPHE, 0x0040, Qt::Key_At, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_GRAVE (41)
-    // "]" Right Square Bracket 0x005d
-    // " }" Right Curly Bracket 0x007d
-    { KEY_GRAVE, 0x005d, Qt::Key_BracketRight, 0x00, 0x00, 0x0000 },
-    { KEY_GRAVE, 0x007d, Qt::Key_BraceRight, Modifiers::ModShift, 0x00, 0x0000 },
+    // "#" Number Sign 0x0023
+    // "̃ " Combining Tilde 0x0303
+    { KEY_GRAVE, 0x0023, Qt::Key_NumberSign, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_GRAVE, 0x0303, Qt::Key_Dead_Tilde, Modifiers::ModShift, Flags::IsDead, 0x0000 },
 
     { KEY_LEFTSHIFT, 0xffff, 0x01000020, 0x00, 0x04, 0x0001 },
 

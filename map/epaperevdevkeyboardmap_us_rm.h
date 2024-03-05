@@ -131,38 +131,28 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     // KEY_0 (11)
     // "0" Digit Zero 0x0030
     // ")" Right Parenthesis 0x0029
-    // "+" Plus Sign 0x002b
     { KEY_0, 0x0030, Qt::Key_0, 0x00, 0x00, 0x0000 },
     { KEY_0, 0x0029, Qt::Key_ParenRight, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_0, 0x002b, Qt::Key_Plus, Modifiers::ModAlt, 0x00, 0x0000 },
-    { KEY_0, 0x002b, Qt::Key_Plus, Modifiers::ModAltGr, 0x00, 0x0000 },
-    { KEY_0, 0x002b, Qt::Key_Plus, Modifiers::ModShift | Modifiers::ModAlt, 0x00, 0x0000 },
-    { KEY_0, 0x002b, Qt::Key_Plus, Modifiers::ModShift | Modifiers::ModAltGr, 0x00, 0x0000 },
 
-    // Keycode 12 non-existent on Seabird.
-    { 12, 0x002D, 0x0000002D, 0x00, 0x00, 0x0000 },
-    { 12, 0x005F, 0x0000005F, 0x01, 0x00, 0x0000 },
-    { 12, 0x005C, 0x0000005C, 0x02, 0x00, 0x0000 },
-    { 12, 0x005F, 0x0400005F, 0x04, 0x00, 0x0000 },
-    { 12, 0x005F, 0x0400005F, 0x05, 0x00, 0x0000 },
-
-    // KEY_EQUAL (13)
+    // KEY_MINUS (12)
     // "-" Hyphen-Minus 0x002d
     // "_" Low Line 0x005f
+    { KEY_MINUS, 0x002d, Qt::Key_Minus, 0x00, 0x00, 0x0000 },
+    { KEY_MINUS, 0x005f, Qt::Key_Underscore, Modifiers::ModShift, 0x00, 0x0000 },
+
+    // KEY_EQUAL (13)
     // "=" Equals Sign 0x003d
-    { KEY_EQUAL, 0x002d, Qt::Key_Minus, 0x00, 0x00, 0x0000 },
-    { KEY_EQUAL, 0x005f, Qt::Key_Underscore, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_EQUAL, 0x003d, Qt::Key_Equal, Modifiers::ModAlt, 0x00, 0x0000 },
-    { KEY_EQUAL, 0x003d, Qt::Key_Equal, Modifiers::ModAltGr, 0x00, 0x0000 },
-    { KEY_EQUAL, 0x003d, Qt::Key_Equal, Modifiers::ModShift | Modifiers::ModAlt, 0x00, 0x0000 },
-    { KEY_EQUAL, 0x003d, Qt::Key_Equal, Modifiers::ModShift | Modifiers::ModAltGr, 0x00, 0x0000 },
+    // "+" Plus Sign 0x002b
+    { KEY_EQUAL, 0x003d, Qt::Key_Equal, 0x00, 0x00, 0x0000 },
+    { KEY_EQUAL, 0x002b, Qt::Key_Plus, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_BACKSPACE (14)
     { KEY_BACKSPACE, 0xffff, Qt::Key_Backspace, 0x00, 0x00, 0x0000 },
     { KEY_BACKSPACE, 0xffff, Qt::Key_Delete, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_TAB (15)
-    { KEY_TAB, 0xffff, 0x01000001, 0x00, 0x00, 0x0000 },
+    // "	" Horizontal Tabulation 0x0009
+    { KEY_TAB, 0x0009, Qt::Key_Tab, Modifiers::ModPlain, 0x00, 0x0000 },
 
     // KEY_Q (16)
     { KEY_Q, 0x0071, 0x00000051, 0x00, 0x02, 0x0000 },
@@ -204,14 +194,23 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_P, 0x0070, 0x00000050, 0x00, 0x02, 0x0000 },
     { KEY_P, 0x0050, 0x00000050, 0x01, 0x02, 0x0000 },
 
-    // Non-existent (26, 27)
-    { KEY_LEFTBRACE, 0x005b, 0x0000005b, 0x00, 0x00, 0x0000 },
-    { KEY_LEFTBRACE, 0x007b, 0x0000007b, 0x01, 0x00, 0x0000 },
-    { KEY_LEFTBRACE, 0xffff, 0x01000000, 0x04, 0x00, 0x0000 },
-    { KEY_RIGHTBRACE, 0x005d, 0x0000005d, 0x00, 0x00, 0x0000 },
-    { KEY_RIGHTBRACE, 0x007d, 0x0000007d, 0x01, 0x00, 0x0000 },
-    { KEY_RIGHTBRACE, 0x007e, 0x0000007e, 0x02, 0x00, 0x0000 },
-    { KEY_RIGHTBRACE, 0x005d, 0x0400005d, 0x04, 0x00, 0x0000 },
+    // KEY_LEFTBRACE (26)
+    // "´" Acute Accent 0x00b4
+    // "`" Grave Accent 0x0060
+    { KEY_LEFTBRACE, 0x00b4, Qt::Key_Dead_Acute, Modifiers::ModPlain, Flags::IsDead, 0x0000 },
+    { KEY_LEFTBRACE, 0x0060, Qt::Key_Dead_Grave, Modifiers::ModShift, Flags::IsDead, 0x0000 },
+    
+    // KEY_RIGHTBRACE (27)
+    // "¨" Combining Diaeresis 0x0308
+    // "̃ " Combining Tilde 0x0303
+    { KEY_RIGHTBRACE, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModPlain, Flags::IsDead, 0x0000 },
+    { KEY_RIGHTBRACE, 0x0303, Qt::Key_Dead_Tilde, Modifiers::ModShift, Flags::IsDead, 0x0000 },
+
+    // KEY_BACKSLASH (43)
+    // "\" Reverse Solidus 0x005c
+    // "|" Vertical Line 0x007c
+    { KEY_BACKSLASH, 0x005c, Qt::Key_Backslash, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_BACKSLASH, 0x007c, Qt::Key_Bar, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_ENTER (28)
     { KEY_ENTER, 0xffff, 0x01000004, 0x00, 0x00, 0x0000 },
@@ -258,22 +257,8 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     // KEY_SEMICOLON (39)
     // ";" Semicolon 0x003b
     // ":" Colon 0x003a
-    { KEY_SEMICOLON, 0x003b, Qt::Key_Semicolon, 0x00, 0x00, 0x0000 },
-    { KEY_SEMICOLON, 0x003a, Qt::Key_Colon, 0x01, 0x00, 0x0000 },
-    { KEY_SEMICOLON, 0x003b, Qt::Key_Semicolon, 0x02, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003a, Qt::Key_Colon, 0x03, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003b, Qt::Key_Semicolon, 0x04, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003a, Qt::Key_Colon, 0x05, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003b, Qt::Key_Semicolon, 0x06, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003a, Qt::Key_Colon, 0x07, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003b, Qt::Key_Semicolon, 0x08, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003a, Qt::Key_Colon, 0x09, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003b, Qt::Key_Semicolon, 0x0a, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003a, Qt::Key_Colon, 0x0b, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003b, Qt::Key_Semicolon, 0x0c, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003a, Qt::Key_Colon, 0x0d, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003b, Qt::Key_Semicolon,  0x0e, 0x02, 0x0000 },
-    { KEY_SEMICOLON, 0x003a, Qt::Key_Colon, 0x0f, 0x02, 0x0000 },
+    { KEY_SEMICOLON, 0x003b, Qt::Key_Semicolon, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_SEMICOLON, 0x003a, Qt::Key_Colon, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_APOSTROPHE (40)
     // "'" Apostrophe 0x0027
@@ -281,19 +266,10 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_APOSTROPHE, 0x0027, Qt::Key_Apostrophe, Modifiers::ModPlain, 0x00, 0x0000 },
     { KEY_APOSTROPHE, 0x0022, Qt::Key_QuoteDbl, Modifiers::ModShift, 0x00, 0x0000 },
 
-    // KEY_GRAVE (41)
-    // "`" Grave Accent 0x0060
-    // "´" Acute Accent 0x00b4
-    { KEY_GRAVE, 0x0060, Qt::Key_Dead_Grave, 0x00, Flags::IsDead, 0x0000 },
-    { KEY_GRAVE, 0x00b4, Qt::Key_Dead_Acute, Modifiers::ModShift, Flags::IsDead, 0x0000 },
+    // Non-existent (41)
+    { KEY_GRAVE, 0xffff, 0x01ffffff, 0x00, 0x00, 0x0000 },
 
     { KEY_LEFTSHIFT, 0xffff, 0x01000020, 0x00, 0x04, 0x0001 },
-
-    // KEY_BACKSLASH (43)
-    // "̃ " Combining Tilde 0x0303
-    // "¨" Combining Diaeresis 0x0308
-    { KEY_BACKSLASH, 0x0303, Qt::Key_Dead_Tilde, Modifiers::ModPlain, Flags::IsDead, 0x0000 },
-    { KEY_BACKSLASH, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModShift, Flags::IsDead, 0x0000 },
 
     // KEY_Z (44)
     { KEY_Z, 0x007a, 0x0000005a, 0x00, 0x02, 0x0000 },
@@ -326,62 +302,20 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     // KEY_COMMA (51)
     // "," Comma 0x002c
     // "<" Less-Than Sign 0x003c
-    { KEY_COMMA, 0x002c, Qt::Key_Comma, 0x00, 0x00, 0x0000 },
-    { KEY_COMMA, 0x003c, Qt::Key_Less, 0x01, 0x00, 0x0000 },
-    { KEY_COMMA, 0x002c, Qt::Key_Comma, 0x02, 0x00, 0x0000 },
-    { KEY_COMMA, 0x003c, Qt::Key_Less, 0x03, 0x00, 0x0000 },
-    { KEY_COMMA, 0x002c, Qt::Key_Comma, 0x04, 0x00, 0x0000 },
-    { KEY_COMMA, 0x003c, Qt::Key_Less, 0x05, 0x00, 0x0000 },
-    { KEY_COMMA, 0x002c, Qt::Key_Comma, 0x06, 0x00, 0x0000 },
-    { KEY_COMMA, 0x003c, Qt::Key_Less, 0x07, 0x00, 0x0000 },
-    { KEY_COMMA, 0x002c, Qt::Key_Comma, 0x08, 0x00, 0x0000 },
-    { KEY_COMMA, 0x003c, Qt::Key_Less, 0x09, 0x00, 0x0000 },
-    { KEY_COMMA, 0x002c, Qt::Key_Comma, 0x0a, 0x00, 0x0000 },
-    { KEY_COMMA, 0x003c, Qt::Key_Less, 0x0b, 0x00, 0x0000 },
-    { KEY_COMMA, 0x002c, Qt::Key_Comma, 0x0c, 0x00, 0x0000 },
-    { KEY_COMMA, 0x003c, Qt::Key_Less, 0x0d, 0x00, 0x0000 },
-    { KEY_COMMA, 0x002c, Qt::Key_Comma, 0x0e, 0x00, 0x0000 },
-    { KEY_COMMA, 0x003c, Qt::Key_Less, 0x0f, 0x00, 0x0000 },
+    { KEY_COMMA, 0x002c, Qt::Key_Comma, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_COMMA, 0x003c, Qt::Key_Less, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_DOT (52)
     // "." Full Stop 0x002e
     // ">" Greater-Than Sign 0x003e
-    { KEY_DOT, 0x002e, Qt::Key_Period, 0x00, 0x00, 0x0000 },
-    { KEY_DOT, 0x003e, Qt::Key_Greater, 0x01, 0x00, 0x0000 },
-    { KEY_DOT, 0x002e, Qt::Key_Period, 0x02, 0x00, 0x0000 },
-    { KEY_DOT, 0x003e, Qt::Key_Greater, 0x03, 0x00, 0x0000 },
-    { KEY_DOT, 0x002e, Qt::Key_Period, 0x04, 0x00, 0x0000 },
-    { KEY_DOT, 0x003e, Qt::Key_Greater, 0x05, 0x00, 0x0000 },
-    { KEY_DOT, 0x002e, Qt::Key_Period, 0x06, 0x00, 0x0000 },
-    { KEY_DOT, 0x003e, Qt::Key_Greater, 0x07, 0x00, 0x0000 },
-    { KEY_DOT, 0x002e, Qt::Key_Period, 0x08, 0x00, 0x0000 },
-    { KEY_DOT, 0x003e, Qt::Key_Greater, 0x09, 0x00, 0x0000 },
-    { KEY_DOT, 0x002e, Qt::Key_Period, 0x0a, 0x00, 0x0000 },
-    { KEY_DOT, 0x003e, Qt::Key_Greater, 0x0b, 0x00, 0x0000 },
-    { KEY_DOT, 0x002e, Qt::Key_Period, 0x0c, 0x00, 0x0000 },
-    { KEY_DOT, 0x003e, Qt::Key_Greater, 0x0d, 0x00, 0x0000 },
-    { KEY_DOT, 0x002e, Qt::Key_Period, 0x0e, 0x00, 0x0000 },
-    { KEY_DOT, 0x003e, Qt::Key_Greater, 0x0f, 0x00, 0x0000 },
+    { KEY_DOT, 0x002e, Qt::Key_Period, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_DOT, 0x003e, Qt::Key_Greater, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_SLASH (53)
     // "/" Solidus 0x002f
     // "?" Question Mark 0x003f
-    { KEY_SLASH, 0x002f, Qt::Key_Slash, 0x00, 0x00, 0x0000 },
-    { KEY_SLASH, 0x003f, Qt::Key_Question, 0x01, 0x00, 0x0000 },
-    { KEY_SLASH, 0x002f, Qt::Key_Slash, 0x02, 0x00, 0x0000 },
-    { KEY_SLASH, 0x003f, Qt::Key_Question, 0x03, 0x00, 0x0000 },
-    { KEY_SLASH, 0x002f, Qt::Key_Slash, 0x04, 0x00, 0x0000 },
-    { KEY_SLASH, 0x003f, Qt::Key_Question, 0x05, 0x00, 0x0000 },
-    { KEY_SLASH, 0x002f, Qt::Key_Slash, 0x06, 0x00, 0x0000 },
-    { KEY_SLASH, 0x003f, Qt::Key_Question, 0x07, 0x00, 0x0000 },
-    { KEY_SLASH, 0x002f, Qt::Key_Slash, 0x08, 0x00, 0x0000 },
-    { KEY_SLASH, 0x003f, Qt::Key_Question, 0x09, 0x00, 0x0000 },
-    { KEY_SLASH, 0x002f, Qt::Key_Slash, 0x0a, 0x00, 0x0000 },
-    { KEY_SLASH, 0x003f, Qt::Key_Question, 0x0b, 0x00, 0x0000 },
-    { KEY_SLASH, 0x002f, Qt::Key_Slash, 0x0c, 0x00, 0x0000 },
-    { KEY_SLASH, 0x003f, Qt::Key_Question, 0x0d, 0x00, 0x0000 },
-    { KEY_SLASH, 0x002f, Qt::Key_Slash, 0x0e, 0x00, 0x0000 },
-    { KEY_SLASH, 0x003f, Qt::Key_Question, 0x0f, 0x00, 0x0000 },
+    { KEY_SLASH, 0x002f, Qt::Key_Slash, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_SLASH, 0x003f, Qt::Key_Question, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_RIGHTSHIFT (54)
     { KEY_RIGHTSHIFT, 0xffff, 0x01000020, 0x00, 0x04, 0x0001 },
