@@ -248,6 +248,23 @@ void EpaperEvdevKeyboardHandler::switchLed(int led, bool state)
     qt_safe_write(m_fd.get(), &led_ie, sizeof(led_ie));
 }
 
+namespace {
+    void handleLidEvent(::input_event event)
+    {
+        if (event.type != EV_SW || event.code != SW_LID) {
+            return;
+        }
+        qCDebug(EpaperEvdevKeyboardMapLog, "Got lid event: %3d", event.value);
+        Qt::Key keyCode = event.value == 1 ? Qt::Key_Close : Qt::Key_Open;
+        if (!QWindowSystemInterface::handleKeyEvent(nullptr, QEvent::KeyPress,
+                    keyCode,
+                    Qt::KeyboardModifiers {})) {
+            qCWarning(EpaperEvdevKeyboardMapLog, "unable to handle lid event");
+        }
+    }
+}
+
+
 void EpaperEvdevKeyboardHandler::readKeycode()
 {
     struct ::input_event buffer[32];
@@ -281,6 +298,12 @@ void EpaperEvdevKeyboardHandler::readKeycode()
     n /= sizeof(buffer[0]);
 
     for (int i = 0; i < n; ++i) {
+
+        if (buffer[i].type == EV_SW && buffer[i].code == SW_LID) {
+            handleLidEvent(buffer[i]);
+            continue;
+        }
+
         if (buffer[i].type != EV_KEY)
             continue;
 
