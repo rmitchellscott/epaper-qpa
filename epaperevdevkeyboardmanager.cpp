@@ -101,6 +101,9 @@ EpaperEvdevKeyboardManager::EpaperEvdevKeyboardManager(const QString &key, const
     for (const QString &device : qAsConst(parsed.devices))
         addKeyboard(device);
 
+    // add hall sensor
+    addKeyboard("/dev/input/event1");
+
     if (parsed.devices.isEmpty()) {
         qCDebug(qLcEvdevKey, "evdevkeyboard: Using device discovery");
         if (auto deviceDiscovery = QDeviceDiscovery::create(QDeviceDiscovery::Device_Keyboard, this)) {
