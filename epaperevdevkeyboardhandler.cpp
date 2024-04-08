@@ -255,7 +255,7 @@ namespace {
             return;
         }
         qCDebug(EpaperEvdevKeyboardMapLog, "Got lid event: %3d", event.value);
-        Qt::Key keyCode = event.value == 1 ? Qt::Key_Close : Qt::Key_Open;
+        const Qt::Key keyCode = event.value == 1 ? Qt::Key_Suspend : Qt::Key_WakeUp;
         if (!QWindowSystemInterface::handleKeyEvent(nullptr, QEvent::KeyPress,
                     keyCode,
                     Qt::KeyboardModifiers {})) {
