@@ -249,6 +249,14 @@ void EpaperEvdevKeyboardHandler::switchLed(int led, bool state)
 }
 
 namespace {
+    /**
+     * Will inspect hall sensor event for folio SW_LID events.
+     *
+     * When folio is closed, dispatch a Qt::Key_Close event
+     * When folio is opened, dispatch a Qt::Key_Open event
+     *
+     * Dependants can then filter on these events to respond accordingly
+     */
     void handleLidEvent(::input_event event)
     {
         if (event.type != EV_SW || event.code != SW_LID) {
@@ -262,6 +270,14 @@ namespace {
             qCWarning(EpaperEvdevKeyboardMapLog, "unable to dispatch lid event");
         }
     }
+    /**
+     * Will inspect hall sensor event for folio SW_PEN_INSERTED events.
+     *
+     * When pen is detached, dispatch a Qt::Key_Open event
+     * When pen is attached, do nothing
+     *
+     * Dependants can then filter on these events to respond accordingly
+     */
     void handlePenEvent(::input_event event)
     {
         if (event.type != EV_SW || event.code != SW_PEN_INSERTED) {
