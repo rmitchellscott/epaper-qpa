@@ -259,7 +259,22 @@ namespace {
         if (!QWindowSystemInterface::handleKeyEvent(nullptr, QEvent::KeyPress,
                     keyCode,
                     Qt::KeyboardModifiers {})) {
-            qCWarning(EpaperEvdevKeyboardMapLog, "unable to handle lid event");
+            qCWarning(EpaperEvdevKeyboardMapLog, "unable to dispatch lid event");
+        }
+    }
+    void handlePenEvent(::input_event event)
+    {
+        if (event.type != EV_SW || event.code != SW_PEN_INSERTED) {
+            return;
+        }
+        qCDebug(EpaperEvdevKeyboardMapLog, "Got pen event: %3d", event.value);
+        // only dispatch wakeup when pen is detached
+        if (event.value == 0) {
+            if (!QWindowSystemInterface::handleKeyEvent(nullptr, QEvent::KeyPress,
+                                                        Qt::Key_WakeUp,
+                                                        Qt::KeyboardModifiers{})) {
+                qCWarning(EpaperEvdevKeyboardMapLog, "unable to dispatch pen event");
+            }
         }
     }
 }
@@ -299,9 +314,16 @@ void EpaperEvdevKeyboardHandler::readKeycode()
 
     for (int i = 0; i < n; ++i) {
 
-        if (buffer[i].type == EV_SW && buffer[i].code == SW_LID) {
-            handleLidEvent(buffer[i]);
-            continue;
+        if (buffer[i].type == EV_SW) {
+            if (buffer[i].code == SW_LID) {
+                handleLidEvent(buffer[i]);
+                continue;
+            }
+
+            if (buffer[i].code == SW_PEN_INSERTED) {
+                handlePenEvent(buffer[i]);
+                continue;
+            }
         }
 
         if (buffer[i].type != EV_KEY)
