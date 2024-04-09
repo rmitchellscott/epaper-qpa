@@ -255,7 +255,7 @@ namespace {
             return;
         }
         qCDebug(EpaperEvdevKeyboardMapLog, "Got lid event: %3d", event.value);
-        const Qt::Key keyCode = event.value == 1 ? Qt::Key_Suspend : Qt::Key_WakeUp;
+        const Qt::Key keyCode = event.value == 1 ? Qt::Key_Close : Qt::Key_Open;
         if (!QWindowSystemInterface::handleKeyEvent(nullptr, QEvent::KeyPress,
                     keyCode,
                     Qt::KeyboardModifiers {})) {
@@ -271,7 +271,7 @@ namespace {
         // only dispatch wakeup when pen is detached
         if (event.value == 0) {
             if (!QWindowSystemInterface::handleKeyEvent(nullptr, QEvent::KeyPress,
-                                                        Qt::Key_WakeUp,
+                                                        Qt::Key_Open,
                                                         Qt::KeyboardModifiers{})) {
                 qCWarning(EpaperEvdevKeyboardMapLog, "unable to dispatch pen event");
             }
