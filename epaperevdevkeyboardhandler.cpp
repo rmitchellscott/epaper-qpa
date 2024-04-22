@@ -75,7 +75,7 @@ Q_LOGGING_CATEGORY(EpaperEvdevKeyboardMapLog, "rm.epaperkeyboardhandler.map", Qt
 
 namespace {
 QSettings const qtSettings("remarkable", "xochitl");
-QString const sysfsLangFile("/sys/pogo/status/lang");
+QString const sysfsLangFile("/sys/bus/serial/devices/serial0-0/rm_hwmon_keyboard.3.auto/language");
 
 using EpaperEvdevInputLocale = EpaperEvdevKeyboardHandler::EpaperEvdevInputLocale;
 
@@ -90,7 +90,7 @@ std::optional<EpaperEvdevInputLocale> determineKeymapFirmware()
         return {};
     }
 
-    QByteArray langCode = file.readAll();
+    QByteArray langCode = file.readAll().trimmed();
     qCDebug(EpaperEvdevKeyboardLog) << "Read a langCode of " << langCode;
     if (langCode.isEmpty()) {
         // This shouldn't happen, but if it does, try to behave sensibly.
