@@ -104,6 +104,8 @@ std::optional<EpaperEvdevInputLocale> determineKeymapFirmware()
         return EpaperEvdevInputLocale::Spain;
     } else if (langCode == "FR") {
         return EpaperEvdevInputLocale::France;
+    } else if (langCode == "IT") {
+        return EpaperEvdevInputLocale::Italy;
     } else if (langCode == "NO") {
         return EpaperEvdevInputLocale::Norway;
     } else if (langCode == "UK") {
@@ -112,7 +114,7 @@ std::optional<EpaperEvdevInputLocale> determineKeymapFirmware()
         return EpaperEvdevInputLocale::UnitedStates;
     } else {
         // "ILLEGAL": Ideally should not be reported, but exists in the code.
-        // "IT", "PT": Implementation of Italian and Portuguese have been postponed indefinitely.
+        // "PT": Implementation Portuguese have been postponed indefinitely.
         return EpaperEvdevInputLocale::UnitedKingdom;
     }
 
@@ -140,6 +142,8 @@ std::optional<EpaperEvdevInputLocale> determineKeymapSettings()
         return EpaperEvdevInputLocale::Spain;
     } else if (locale == "fr_FR") {
         return EpaperEvdevInputLocale::France;
+    } else if (locale == "it_IT") {
+        return EpaperEvdevInputLocale::Italy;
     } else if (locale == "de_DE") {
         return EpaperEvdevInputLocale::Germany;
     }
@@ -610,6 +614,7 @@ EpaperEvdevKeyboardHandler::KeycodeAction EpaperEvdevKeyboardHandler::processKey
 #include "map/epaperevdevkeyboardmap_dk.h"
 #include "map/epaperevdevkeyboardmap_es.h"
 #include "map/epaperevdevkeyboardmap_fr.h"
+#include "map/epaperevdevkeyboardmap_it.h"
 #include "map/epaperevdevkeyboardmap_no.h"
 #include "map/epaperevdevkeyboardmap_se.h"
 #include "map/epaperevdevkeyboardmap_uk.h"
@@ -668,6 +673,12 @@ void EpaperEvdevKeyboardHandler::resetKeymap()
         // French has exceptions where caps lock is neither ignored nor treated the same with shift modifier.
         m_capsLockException.assign(std::cbegin(Locale::France::capsLockException), std::cend(Locale::France::capsLockException));
         qCDebug(EpaperEvdevKeyboardLog) << "setting French keymap" << m_keymap_size;
+        break;
+    case EpaperEvdevInputLocale::Italy:
+        populateKeymap<Locale::Italy>();
+        // Italian has exceptions where caps lock is neither ignored nor treated the same with shift modifier.
+        m_capsLockException.assign(std::cbegin(Locale::Italy::capsLockException), std::cend(Locale::Italy::capsLockException));
+        qCDebug(EpaperEvdevKeyboardLog) << "setting Italian keymap" << m_keymap_size;
         break;
     case EpaperEvdevInputLocale::Germany:
         populateKeymap<Locale::Germany>();

@@ -27,6 +27,7 @@ HEADERS += \
     map/epaperevdevkeyboardmap_dk.h \
     map/epaperevdevkeyboardmap_es.h \
     map/epaperevdevkeyboardmap_fr.h \
+    map/epaperevdevkeyboardmap_it.h \
     map/epaperevdevkeyboardmap_no.h \
     map/epaperevdevkeyboardmap_se.h \
     map/epaperevdevkeyboardmap_uk.h \
