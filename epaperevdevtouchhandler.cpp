@@ -77,7 +77,6 @@ public:
     bool m_forceToActiveWindow;
     bool m_typeB;
     QTransform m_rotate;
-    bool m_singleTouch;
     QString m_screenName;
     mutable QPointer<QScreen> m_screen;
 
@@ -102,7 +101,7 @@ EpaperEvdevTouchScreenData::EpaperEvdevTouchScreenData(EpaperEvdevTouchScreenHan
       hw_range_x_min(0), hw_range_x_max(0),
       hw_range_y_min(0), hw_range_y_max(0),
       hw_pressure_min(0), hw_pressure_max(0),
-      m_forceToActiveWindow(false), m_typeB(false), m_singleTouch(false),
+      m_forceToActiveWindow(false), m_typeB(false),
       m_filtered(false), m_prediction(0)
 {
     for (const QString &arg : args) {
@@ -172,15 +171,14 @@ EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &devi
     long absbits[NUM_LONGS(ABS_CNT)];
     if (ioctl(m_fd, EVIOCGBIT(EV_ABS, sizeof(absbits)), absbits) >= 0) {
         d->m_typeB = testBit(ABS_MT_SLOT, absbits);
-        d->m_singleTouch = !testBit(ABS_MT_POSITION_X, absbits);
+        Q_ASSERT_X(testBit(ABS_MT_POSITION_X, absbits), "", "single touch is not supported");
     }
 
     d->deviceNode = device;
     qCDebug(epaperLcEvdevTouch,
-            "evdevtouch: %ls: Protocol type %c (%s), filtered=%s",
+            "evdevtouch: %ls: Protocol type %c, filtered=%s",
             qUtf16Printable(d->deviceNode),
             d->m_typeB ? 'B' : 'A',
-            d->m_singleTouch ? "single" : "multi",
             d->m_filtered ? "yes" : "no");
     if (d->m_filtered)
         qCDebug(epaperLcEvdevTouch, " - prediction=%d", d->m_prediction);
@@ -189,7 +187,7 @@ EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &devi
     memset(&absInfo, 0, sizeof(input_absinfo));
     bool has_x_range = false, has_y_range = false;
 
-    if (ioctl(m_fd, EVIOCGABS((d->m_singleTouch ? ABS_X : ABS_MT_POSITION_X)), &absInfo) >= 0) {
+    if (ioctl(m_fd, EVIOCGABS(ABS_MT_POSITION_X), &absInfo) >= 0) {
         qCDebug(epaperLcEvdevTouch, "evdevtouch: %ls: min X: %d max X: %d", qUtf16Printable(device),
                 absInfo.minimum, absInfo.maximum);
         d->hw_range_x_min = absInfo.minimum;
@@ -197,7 +195,7 @@ EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &devi
         has_x_range = true;
     }
 
-    if (ioctl(m_fd, EVIOCGABS((d->m_singleTouch ? ABS_Y : ABS_MT_POSITION_Y)), &absInfo) >= 0) {
+    if (ioctl(m_fd, EVIOCGABS(ABS_MT_POSITION_Y), &absInfo) >= 0) {
         qCDebug(epaperLcEvdevTouch, "evdevtouch: %ls: min Y: %d max Y: %d", qUtf16Printable(device),
                 absInfo.minimum, absInfo.maximum);
         d->hw_range_y_min = absInfo.minimum;
@@ -418,19 +416,15 @@ void EpaperEvdevTouchScreenData::processInputEvent(input_event *data)
 {
     if (data->type == EV_ABS) {
 
-        if (data->code == ABS_MT_POSITION_X || (m_singleTouch && data->code == ABS_X)) {
+        if (data->code == ABS_MT_POSITION_X) {
             m_currentData.x = qBound(hw_range_x_min, data->value, hw_range_x_max);
-            if (m_singleTouch)
-                m_contacts[m_currentSlot].x = m_currentData.x;
             if (m_typeB) {
                 m_contacts[m_currentSlot].x = m_currentData.x;
                 if (m_contacts[m_currentSlot].state == QEventPoint::State::Stationary)
                     m_contacts[m_currentSlot].state = QEventPoint::State::Updated;
             }
-        } else if (data->code == ABS_MT_POSITION_Y || (m_singleTouch && data->code == ABS_Y)) {
+        } else if (data->code == ABS_MT_POSITION_Y) {
             m_currentData.y = qBound(hw_range_y_min, data->value, hw_range_y_max);
-            if (m_singleTouch)
-                m_contacts[m_currentSlot].y = m_currentData.y;
             if (m_typeB) {
                 m_contacts[m_currentSlot].y = m_currentData.y;
                 if (m_contacts[m_currentSlot].state == QEventPoint::State::Stationary)
@@ -457,7 +451,7 @@ void EpaperEvdevTouchScreenData::processInputEvent(input_event *data)
                 qCDebug(epaperLcEvents, "EV_ABS code 0x%x: pressure %d; bounding to [%d,%d]",
                         data->code, data->value, hw_pressure_min, hw_pressure_max);
             m_currentData.pressure = qBound(hw_pressure_min, data->value, hw_pressure_max);
-            if (m_typeB || m_singleTouch)
+            if (m_typeB)
                 m_contacts[m_currentSlot].pressure = m_currentData.pressure;
         } else if (data->code == ABS_MT_SLOT) {
             m_currentSlot = data->value;
@@ -572,7 +566,7 @@ void EpaperEvdevTouchScreenData::processInputEvent(input_event *data)
         }
 
         m_lastContacts = m_contacts;
-        if (!m_typeB && !m_singleTouch)
+        if (!m_typeB)
             m_contacts.clear();
 
 
