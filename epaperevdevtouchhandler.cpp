@@ -2,8 +2,8 @@
 // Copyright (C) 2016 Jolla Ltd, author: <gunnar.sletta@jollamobile.com>
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include "qevdevtouchhandler_p.h"
-#include "qoutputmapping_p.h"
+#include "epaperevdevtouchhandler.h"
+#include <QtInputSupport/private/qoutputmapping_p.h>
 #include <QStringList>
 #include <QHash>
 #include <QSocketNotifier>
@@ -45,8 +45,8 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_LOGGING_CATEGORY(qLcEvdevTouch, "qt.qpa.input")
-Q_LOGGING_CATEGORY(qLcEvents, "qt.qpa.input.events")
+Q_LOGGING_CATEGORY(epaperLcEvdevTouch, "qt.qpa.input")
+Q_LOGGING_CATEGORY(epaperLcEvents, "qt.qpa.input.events")
 
 /* android (and perhaps some other linux-derived stuff) don't define everything
  * in linux/input.h, so we'll need to do that ourselves.
@@ -76,15 +76,15 @@ Q_LOGGING_CATEGORY(qLcEvents, "qt.qpa.input.events")
 #define SYN_MT_REPORT           2
 #endif
 
-class QEvdevTouchScreenData
+class EpaperEvdevTouchScreenData
 {
 public:
-    QEvdevTouchScreenData(QEvdevTouchScreenHandler *q_ptr, const QStringList &args);
+    EpaperEvdevTouchScreenData(EpaperEvdevTouchScreenHandler *q_ptr, const QStringList &args);
 
     void processInputEvent(input_event *data);
     void assignIds();
 
-    QEvdevTouchScreenHandler *q;
+    EpaperEvdevTouchScreenHandler *q;
     int m_lastEventType;
     QList<QWindowSystemInterface::TouchPoint> m_touchPoints;
     QList<QWindowSystemInterface::TouchPoint> m_lastTouchPoints;
@@ -140,7 +140,7 @@ public:
     QMutex m_mutex;
 };
 
-QEvdevTouchScreenData::QEvdevTouchScreenData(QEvdevTouchScreenHandler *q_ptr, const QStringList &args)
+EpaperEvdevTouchScreenData::EpaperEvdevTouchScreenData(EpaperEvdevTouchScreenHandler *q_ptr, const QStringList &args)
     : q(q_ptr),
       m_lastEventType(-1),
       m_currentSlot(0),
@@ -171,7 +171,7 @@ static inline bool testBit(long bit, const long *array)
 }
 #endif
 
-QEvdevTouchScreenHandler::QEvdevTouchScreenHandler(const QString &device, const QString &spec, QObject *parent)
+EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &device, const QString &spec, QObject *parent)
     : QObject(parent), m_notify(nullptr), m_fd(-1), d(nullptr), m_device(nullptr)
 #if QT_CONFIG(mtdev)
       , m_mtdev(nullptr)
@@ -206,13 +206,13 @@ QEvdevTouchScreenHandler::QEvdevTouchScreenHandler(const QString &device, const 
         }
     }
 
-    qCDebug(qLcEvdevTouch, "evdevtouch: Using device %ls", qUtf16Printable(device));
+    qCDebug(epaperLcEvdevTouch, "evdevtouch: Using device %ls", qUtf16Printable(device));
 
     m_fd = QT_OPEN(device.toLocal8Bit().constData(), O_RDONLY | O_NDELAY, 0);
 
     if (m_fd >= 0) {
         m_notify = new QSocketNotifier(m_fd, QSocketNotifier::Read, this);
-        connect(m_notify, &QSocketNotifier::activated, this, &QEvdevTouchScreenHandler::readData);
+        connect(m_notify, &QSocketNotifier::activated, this, &EpaperEvdevTouchScreenHandler::readData);
     } else {
         qErrnoWarning("evdevtouch: Cannot open input device %ls", qUtf16Printable(device));
         return;
@@ -229,7 +229,7 @@ QEvdevTouchScreenHandler::QEvdevTouchScreenHandler(const QString &device, const 
     }
 #endif
 
-    d = new QEvdevTouchScreenData(this, args);
+    d = new EpaperEvdevTouchScreenData(this, args);
 
 #if QT_CONFIG(mtdev)
     const char *mtdevStr = "(mtdev)";
@@ -244,21 +244,21 @@ QEvdevTouchScreenHandler::QEvdevTouchScreenHandler(const QString &device, const 
 #endif
 
     d->deviceNode = device;
-    qCDebug(qLcEvdevTouch,
+    qCDebug(epaperLcEvdevTouch,
             "evdevtouch: %ls: Protocol type %c %s (%s), filtered=%s",
             qUtf16Printable(d->deviceNode),
             d->m_typeB ? 'B' : 'A', mtdevStr,
             d->m_singleTouch ? "single" : "multi",
             d->m_filtered ? "yes" : "no");
     if (d->m_filtered)
-        qCDebug(qLcEvdevTouch, " - prediction=%d", d->m_prediction);
+        qCDebug(epaperLcEvdevTouch, " - prediction=%d", d->m_prediction);
 
     input_absinfo absInfo;
     memset(&absInfo, 0, sizeof(input_absinfo));
     bool has_x_range = false, has_y_range = false;
 
     if (ioctl(m_fd, EVIOCGABS((d->m_singleTouch ? ABS_X : ABS_MT_POSITION_X)), &absInfo) >= 0) {
-        qCDebug(qLcEvdevTouch, "evdevtouch: %ls: min X: %d max X: %d", qUtf16Printable(device),
+        qCDebug(epaperLcEvdevTouch, "evdevtouch: %ls: min X: %d max X: %d", qUtf16Printable(device),
                 absInfo.minimum, absInfo.maximum);
         d->hw_range_x_min = absInfo.minimum;
         d->hw_range_x_max = absInfo.maximum;
@@ -266,7 +266,7 @@ QEvdevTouchScreenHandler::QEvdevTouchScreenHandler(const QString &device, const 
     }
 
     if (ioctl(m_fd, EVIOCGABS((d->m_singleTouch ? ABS_Y : ABS_MT_POSITION_Y)), &absInfo) >= 0) {
-        qCDebug(qLcEvdevTouch, "evdevtouch: %ls: min Y: %d max Y: %d", qUtf16Printable(device),
+        qCDebug(epaperLcEvdevTouch, "evdevtouch: %ls: min Y: %d max Y: %d", qUtf16Printable(device),
                 absInfo.minimum, absInfo.maximum);
         d->hw_range_y_min = absInfo.minimum;
         d->hw_range_y_max = absInfo.maximum;
@@ -277,7 +277,7 @@ QEvdevTouchScreenHandler::QEvdevTouchScreenHandler(const QString &device, const 
         qWarning("evdevtouch: %ls: Invalid ABS limits, behavior unspecified", qUtf16Printable(device));
 
     if (ioctl(m_fd, EVIOCGABS(ABS_PRESSURE), &absInfo) >= 0) {
-        qCDebug(qLcEvdevTouch, "evdevtouch: %ls: min pressure: %d max pressure: %d", qUtf16Printable(device),
+        qCDebug(epaperLcEvdevTouch, "evdevtouch: %ls: min pressure: %d max pressure: %d", qUtf16Printable(device),
                 absInfo.minimum, absInfo.maximum);
         if (absInfo.maximum > absInfo.minimum) {
             d->hw_pressure_min = absInfo.minimum;
@@ -288,7 +288,7 @@ QEvdevTouchScreenHandler::QEvdevTouchScreenHandler(const QString &device, const 
     char name[1024];
     if (ioctl(m_fd, EVIOCGNAME(sizeof(name) - 1), name) >= 0) {
         d->hw_name = QString::fromLocal8Bit(name);
-        qCDebug(qLcEvdevTouch, "evdevtouch: %ls: device name: %s", qUtf16Printable(device), name);
+        qCDebug(epaperLcEvdevTouch, "evdevtouch: %ls: device name: %s", qUtf16Printable(device), name);
     }
 
     // Fix up the coordinate ranges for am335x in case the kernel driver does not have them fixed.
@@ -301,7 +301,7 @@ QEvdevTouchScreenHandler::QEvdevTouchScreenHandler(const QString &device, const 
             d->hw_range_y_min = 220;
             d->hw_range_y_max = 3907;
         }
-        qCDebug(qLcEvdevTouch, "evdevtouch: found ti-tsc, overriding: min X: %d max X: %d min Y: %d max Y: %d",
+        qCDebug(epaperLcEvdevTouch, "evdevtouch: found ti-tsc, overriding: min X: %d max X: %d min Y: %d max Y: %d",
                 d->hw_range_x_min, d->hw_range_x_max, d->hw_range_y_min, d->hw_range_y_max);
     }
 
@@ -324,14 +324,14 @@ QEvdevTouchScreenHandler::QEvdevTouchScreenHandler(const QString &device, const 
     if (mapping->load()) {
         d->m_screenName = mapping->screenNameForDeviceNode(d->deviceNode);
         if (!d->m_screenName.isEmpty())
-            qCDebug(qLcEvdevTouch, "evdevtouch: Mapping device %ls to screen %ls",
+            qCDebug(epaperLcEvdevTouch, "evdevtouch: Mapping device %ls to screen %ls",
                     qUtf16Printable(d->deviceNode), qUtf16Printable(d->m_screenName));
     }
 
     registerPointingDevice();
 }
 
-QEvdevTouchScreenHandler::~QEvdevTouchScreenHandler()
+EpaperEvdevTouchScreenHandler::~EpaperEvdevTouchScreenHandler()
 {
 #if QT_CONFIG(mtdev)
     if (m_mtdev) {
@@ -348,17 +348,17 @@ QEvdevTouchScreenHandler::~QEvdevTouchScreenHandler()
     unregisterPointingDevice();
 }
 
-bool QEvdevTouchScreenHandler::isFiltered() const
+bool EpaperEvdevTouchScreenHandler::isFiltered() const
 {
     return d && d->m_filtered;
 }
 
-QPointingDevice *QEvdevTouchScreenHandler::touchDevice() const
+QPointingDevice *EpaperEvdevTouchScreenHandler::touchDevice() const
 {
     return m_device;
 }
 
-void QEvdevTouchScreenHandler::readData()
+void EpaperEvdevTouchScreenHandler::readData()
 {
     ::input_event buffer[32];
     int events = 0;
@@ -421,7 +421,7 @@ err:
     }
 }
 
-void QEvdevTouchScreenHandler::registerPointingDevice()
+void EpaperEvdevTouchScreenHandler::registerPointingDevice()
 {
     if (m_device)
         return;
@@ -445,21 +445,21 @@ void QEvdevTouchScreenHandler::registerPointingDevice()
 
 /*! \internal
 
-    QEvdevTouchScreenHandler::unregisterPointingDevice can be called by several cases.
+    EpaperEvdevTouchScreenHandler::unregisterPointingDevice can be called by several cases.
 
     First of all, the case that an application is terminated, and destroy all input devices
     immediately to unregister in this case.
 
     Secondly, the case that removing a device without touch events for the device while the
-    application is still running. In this case, the destructor of QEvdevTouchScreenHandler from
-    the connection with QDeviceDiscovery::deviceRemoved in QEvdevTouchManager calls this method.
+    application is still running. In this case, the destructor of EpaperEvdevTouchScreenHandler from
+    the connection with QDeviceDiscovery::deviceRemoved in EpaperEvdevTouchManager calls this method.
     And this method moves a device into the main thread and then deletes it later but there is no
     touch events for the device so that the device would be deleted in appropriate time.
 
     Finally, this case is similar as the second one but with touch events, that is, a device is
     removed while touch events are given to the device and the application is still running.
     In this case, this method is called by readData with ENODEV error and the destructor of
-    QEvdevTouchScreenHandler. So in order to prevent accessing the device which is already nullptr,
+    EpaperEvdevTouchScreenHandler. So in order to prevent accessing the device which is already nullptr,
     check the nullity of a device first. And as same as the second case, move the device into the
     main thread and then delete it later. But in this case, cannot guarantee which event is
     handled first since the list or queue where posting QDeferredDeleteEvent and appending touch
@@ -472,7 +472,7 @@ void QEvdevTouchScreenHandler::registerPointingDevice()
 
     see QGuiApplicationPrivate::processTouchEvent().
  */
-void QEvdevTouchScreenHandler::unregisterPointingDevice()
+void EpaperEvdevTouchScreenHandler::unregisterPointingDevice()
 {
     if (!m_device)
         return;
@@ -486,7 +486,7 @@ void QEvdevTouchScreenHandler::unregisterPointingDevice()
     m_device = nullptr;
 }
 
-void QEvdevTouchScreenData::addTouchPoint(const Contact &contact, QEventPoint::States *combinedStates)
+void EpaperEvdevTouchScreenData::addTouchPoint(const Contact &contact, QEventPoint::States *combinedStates)
 {
     QWindowSystemInterface::TouchPoint tp;
     tp.id = contact.trackingId;
@@ -510,7 +510,7 @@ void QEvdevTouchScreenData::addTouchPoint(const Contact &contact, QEventPoint::S
     m_touchPoints.append(tp);
 }
 
-void QEvdevTouchScreenData::processInputEvent(input_event *data)
+void EpaperEvdevTouchScreenData::processInputEvent(input_event *data)
 {
     if (data->type == EV_ABS) {
 
@@ -549,8 +549,8 @@ void QEvdevTouchScreenData::processInputEvent(input_event *data)
             if (m_typeB)
                 m_contacts[m_currentSlot].maj = m_currentData.maj;
         } else if (data->code == ABS_PRESSURE || data->code == ABS_MT_PRESSURE) {
-            if (Q_UNLIKELY(qLcEvents().isDebugEnabled()))
-                qCDebug(qLcEvents, "EV_ABS code 0x%x: pressure %d; bounding to [%d,%d]",
+            if (Q_UNLIKELY(epaperLcEvents().isDebugEnabled()))
+                qCDebug(epaperLcEvents, "EV_ABS code 0x%x: pressure %d; bounding to [%d,%d]",
                         data->code, data->value, hw_pressure_min, hw_pressure_max);
             m_currentData.pressure = qBound(hw_pressure_min, data->value, hw_pressure_max);
             if (m_typeB || m_singleTouch)
@@ -679,7 +679,7 @@ void QEvdevTouchScreenData::processInputEvent(input_event *data)
     m_lastEventType = data->type;
 }
 
-int QEvdevTouchScreenData::findClosestContact(const QHash<int, Contact> &contacts, int x, int y, int *dist)
+int EpaperEvdevTouchScreenData::findClosestContact(const QHash<int, Contact> &contacts, int x, int y, int *dist)
 {
     int minDist = -1, id = -1;
     for (QHash<int, Contact>::const_iterator it = contacts.constBegin(), ite = contacts.constEnd();
@@ -698,7 +698,7 @@ int QEvdevTouchScreenData::findClosestContact(const QHash<int, Contact> &contact
     return id;
 }
 
-void QEvdevTouchScreenData::assignIds()
+void EpaperEvdevTouchScreenData::assignIds()
 {
     QHash<int, Contact> candidates = m_lastContacts, pending = m_contacts, newContacts;
     int maxId = -1;
@@ -732,7 +732,7 @@ void QEvdevTouchScreenData::assignIds()
     m_contacts = newContacts;
 }
 
-QRect QEvdevTouchScreenData::screenGeometry() const
+QRect EpaperEvdevTouchScreenData::screenGeometry() const
 {
     if (m_forceToActiveWindow) {
         QWindow *win = QGuiApplication::focusWindow();
@@ -766,7 +766,7 @@ QRect QEvdevTouchScreenData::screenGeometry() const
     return screen ? QHighDpi::toNativePixels(screen->geometry(), screen) : QRect();
 }
 
-void QEvdevTouchScreenData::reportPoints()
+void EpaperEvdevTouchScreenData::reportPoints()
 {
     QRect winRect = screenGeometry();
     if (winRect.isNull())
@@ -799,8 +799,8 @@ void QEvdevTouchScreenData::reportPoints()
         else
             tp.pressure = (tp.pressure - hw_pressure_min) / qreal(hw_pressure_max - hw_pressure_min);
 
-        if (Q_UNLIKELY(qLcEvents().isDebugEnabled()))
-            qCDebug(qLcEvents) << "reporting" << tp;
+        if (Q_UNLIKELY(epaperLcEvents().isDebugEnabled()))
+            qCDebug(epaperLcEvents) << "reporting" << tp;
     }
 
     // Let qguiapp pick the target window.
@@ -810,7 +810,7 @@ void QEvdevTouchScreenData::reportPoints()
         QWindowSystemInterface::handleTouchEvent(nullptr, q->touchDevice(), m_touchPoints);
 }
 
-QEvdevTouchScreenHandlerThread::QEvdevTouchScreenHandlerThread(const QString &device, const QString &spec, QObject *parent)
+EpaperEvdevTouchScreenHandlerThread::EpaperEvdevTouchScreenHandlerThread(const QString &device, const QString &spec, QObject *parent)
     : QDaemonThread(parent), m_device(device), m_spec(spec), m_handler(nullptr), m_touchDeviceRegistered(false)
     , m_touchUpdatePending(false)
     , m_filterWindow(nullptr)
@@ -819,18 +819,18 @@ QEvdevTouchScreenHandlerThread::QEvdevTouchScreenHandlerThread(const QString &de
     start();
 }
 
-QEvdevTouchScreenHandlerThread::~QEvdevTouchScreenHandlerThread()
+EpaperEvdevTouchScreenHandlerThread::~EpaperEvdevTouchScreenHandlerThread()
 {
     quit();
     wait();
 }
 
-void QEvdevTouchScreenHandlerThread::run()
+void EpaperEvdevTouchScreenHandlerThread::run()
 {
-    m_handler = new QEvdevTouchScreenHandler(m_device, m_spec);
+    m_handler = new EpaperEvdevTouchScreenHandler(m_device, m_spec);
 
     if (m_handler->isFiltered())
-        connect(m_handler, &QEvdevTouchScreenHandler::touchPointsUpdated, this, &QEvdevTouchScreenHandlerThread::scheduleTouchPointUpdate);
+        connect(m_handler, &EpaperEvdevTouchScreenHandler::touchPointsUpdated, this, &EpaperEvdevTouchScreenHandlerThread::scheduleTouchPointUpdate);
 
     // Report the registration to the parent thread by invoking the method asynchronously
     QMetaObject::invokeMethod(this, "notifyTouchDeviceRegistered", Qt::QueuedConnection);
@@ -841,18 +841,18 @@ void QEvdevTouchScreenHandlerThread::run()
     m_handler = nullptr;
 }
 
-bool QEvdevTouchScreenHandlerThread::isPointingDeviceRegistered() const
+bool EpaperEvdevTouchScreenHandlerThread::isPointingDeviceRegistered() const
 {
     return m_touchDeviceRegistered;
 }
 
-void QEvdevTouchScreenHandlerThread::notifyTouchDeviceRegistered()
+void EpaperEvdevTouchScreenHandlerThread::notifyTouchDeviceRegistered()
 {
     m_touchDeviceRegistered = true;
     emit touchDeviceRegistered();
 }
 
-void QEvdevTouchScreenHandlerThread::scheduleTouchPointUpdate()
+void EpaperEvdevTouchScreenHandlerThread::scheduleTouchPointUpdate()
 {
     QWindow *window = QGuiApplication::focusWindow();
     if (window != m_filterWindow) {
@@ -868,7 +868,7 @@ void QEvdevTouchScreenHandlerThread::scheduleTouchPointUpdate()
     }
 }
 
-bool QEvdevTouchScreenHandlerThread::eventFilter(QObject *object, QEvent *event)
+bool EpaperEvdevTouchScreenHandlerThread::eventFilter(QObject *object, QEvent *event)
 {
     if (m_touchUpdatePending && object == m_filterWindow && event->type() == QEvent::UpdateRequest) {
         m_touchUpdatePending = false;
@@ -877,7 +877,7 @@ bool QEvdevTouchScreenHandlerThread::eventFilter(QObject *object, QEvent *event)
     return false;
 }
 
-void QEvdevTouchScreenHandlerThread::filterAndSendTouchPoints()
+void EpaperEvdevTouchScreenHandlerThread::filterAndSendTouchPoints()
 {
     QRect winRect = m_handler->d->screenGeometry();
     if (winRect.isNull())
@@ -987,4 +987,3 @@ void QEvdevTouchScreenHandlerThread::filterAndSendTouchPoints()
 
 QT_END_NAMESPACE
 
-#include "moc_qevdevtouchhandler_p.cpp"

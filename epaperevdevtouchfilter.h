@@ -16,9 +16,9 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QEvdevTouchFilter
+struct EpaperEvdevTouchFilter
 {
-    QEvdevTouchFilter();
+    EpaperEvdevTouchFilter();
 
     void initialize(float pos, float velocity);
     void update(float pos, float velocity, float timeDelta);
@@ -92,11 +92,11 @@ private:
     mat2 H;
 };
 
-inline QEvdevTouchFilter::QEvdevTouchFilter()
+inline EpaperEvdevTouchFilter::EpaperEvdevTouchFilter()
 {
 }
 
-inline void QEvdevTouchFilter::initialize(float pos, float velocity)
+inline void EpaperEvdevTouchFilter::initialize(float pos, float velocity)
 {
     x = vec2(pos, velocity);
 
@@ -109,7 +109,7 @@ inline void QEvdevTouchFilter::initialize(float pos, float velocity)
              0.0f, 0.1f);
 }
 
-inline void QEvdevTouchFilter::update(float pos, float velocity, float dT)
+inline void EpaperEvdevTouchFilter::update(float pos, float velocity, float dT)
 {
     A.b = dT;
 

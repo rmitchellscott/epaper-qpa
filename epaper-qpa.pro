@@ -5,15 +5,26 @@ CONFIG += plugin
 CONFIG += qpa/genericunixfontdatabase c++17
 QT += core-private gui-private input_support-private
 
-SOURCES =   main.cpp \
-            epaperintegration.cpp \
-            epaperbackingstore.cpp \
-            epaperevdevkeyboardhandler.cpp \
-            epaperevdevkeyboardmanager.cpp
-HEADERS =   epaperintegration.h \
-            epaperbackingstore.h \
-            epaperevdevkeyboardhandler.h \
-            epaperevdevkeyboardmanager.h
+SOURCES = \
+    epaperbackingstore.cpp \
+    epaperevdevkeyboardhandler.cpp \
+    epaperevdevkeyboardmanager.cpp \
+    epaperevdevtouchhandler.cpp \
+    epaperevdevtouchmanager.cpp \
+    epaperevdevutil.cpp \
+    epaperintegration.cpp \
+    main.cpp
+
+
+HEADERS = \
+    epaperbackingstore.h \
+    epaperevdevkeyboardhandler.h \
+    epaperevdevkeyboardmanager.h \
+    epaperevdevtouchfilter.h \
+    epaperevdevtouchhandler.h \
+    epaperevdevtouchmanager.h \
+    epaperevdevutil.h \
+    epaperintegration.h
 
 HEADERS += \
     map/epaperevdevkeyboardmap_de.h \

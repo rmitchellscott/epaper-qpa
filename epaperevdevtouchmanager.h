@@ -1,8 +1,8 @@
 // Copyright (C) 2016 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#ifndef QEVDEVTOUCHMANAGER_P_H
-#define QEVDEVTOUCHMANAGER_P_H
+#ifndef EPAPEREVDEVTOUCHMANAGER_P_H
+#define EPAPEREVDEVTOUCHMANAGER_P_H
 
 //
 //  W A R N I N G
@@ -24,13 +24,13 @@
 QT_BEGIN_NAMESPACE
 
 class QDeviceDiscovery;
-class QEvdevTouchScreenHandlerThread;
+class EpaperEvdevTouchScreenHandlerThread;
 
-class QEvdevTouchManager : public QObject
+class EpaperEvdevTouchManager : public QObject
 {
 public:
-    QEvdevTouchManager(const QString &key, const QString &spec, QObject *parent = nullptr);
-    ~QEvdevTouchManager();
+    EpaperEvdevTouchManager(const QString &key, const QString &spec, QObject *parent = nullptr);
+    ~EpaperEvdevTouchManager();
 
     void addDevice(const QString &deviceNode);
     void removeDevice(const QString &deviceNode);
@@ -39,9 +39,9 @@ public:
 
 private:
     QString m_spec;
-    QtInputSupport::DeviceHandlerList<QEvdevTouchScreenHandlerThread> m_activeDevices;
+    QtInputSupport::DeviceHandlerList<EpaperEvdevTouchScreenHandlerThread> m_activeDevices;
 };
 
 QT_END_NAMESPACE
 
-#endif // QEVDEVTOUCHMANAGER_P_H
+#endif // EPAPEREVDEVTOUCHMANAGER_P_H

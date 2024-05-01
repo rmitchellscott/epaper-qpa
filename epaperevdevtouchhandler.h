@@ -2,8 +2,8 @@
 // Copyright (C) 2016 Jolla Ltd, author: <gunnar.sletta@jollamobile.com>
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#ifndef QEVDEVTOUCHHANDLER_P_H
-#define QEVDEVTOUCHHANDLER_P_H
+#ifndef EPAPEREVDEVTOUCHHANDLER_P_H
+#define EPAPEREVDEVTOUCHHANDLER_P_H
 
 //
 //  W A R N I N G
@@ -25,7 +25,7 @@
 #include <QThread>
 #include <QtCore/private/qthread_p.h>
 #include <qpa/qwindowsysteminterface.h>
-#include "qevdevtouchfilter_p.h"
+#include "epaperevdevtouchfilter.h"
 
 #if QT_CONFIG(mtdev)
 struct mtdev;
@@ -34,16 +34,16 @@ struct mtdev;
 QT_BEGIN_NAMESPACE
 
 class QSocketNotifier;
-class QEvdevTouchScreenData;
+class EpaperEvdevTouchScreenData;
 class QPointingDevice;
 
-class QEvdevTouchScreenHandler : public QObject
+class EpaperEvdevTouchScreenHandler : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit QEvdevTouchScreenHandler(const QString &device, const QString &spec = QString(), QObject *parent = nullptr);
-    ~QEvdevTouchScreenHandler();
+    explicit EpaperEvdevTouchScreenHandler(const QString &device, const QString &spec = QString(), QObject *parent = nullptr);
+    ~EpaperEvdevTouchScreenHandler();
 
     QPointingDevice *touchDevice() const;
 
@@ -55,27 +55,27 @@ signals:
     void touchPointsUpdated();
 
 private:
-    friend class QEvdevTouchScreenData;
-    friend class QEvdevTouchScreenHandlerThread;
+    friend class EpaperEvdevTouchScreenData;
+    friend class EpaperEvdevTouchScreenHandlerThread;
 
     void registerPointingDevice();
     void unregisterPointingDevice();
 
     QSocketNotifier *m_notify;
     int m_fd;
-    QEvdevTouchScreenData *d;
+    EpaperEvdevTouchScreenData *d;
     QPointingDevice *m_device;
 #if QT_CONFIG(mtdev)
     mtdev *m_mtdev;
 #endif
 };
 
-class QEvdevTouchScreenHandlerThread : public QDaemonThread
+class EpaperEvdevTouchScreenHandlerThread : public QDaemonThread
 {
     Q_OBJECT
 public:
-    explicit QEvdevTouchScreenHandlerThread(const QString &device, const QString &spec, QObject *parent = nullptr);
-    ~QEvdevTouchScreenHandlerThread();
+    explicit EpaperEvdevTouchScreenHandlerThread(const QString &device, const QString &spec, QObject *parent = nullptr);
+    ~EpaperEvdevTouchScreenHandlerThread();
     void run() override;
 
     bool isPointingDeviceRegistered() const;
@@ -95,15 +95,15 @@ private:
 
     QString m_device;
     QString m_spec;
-    QEvdevTouchScreenHandler *m_handler;
+    EpaperEvdevTouchScreenHandler *m_handler;
     bool m_touchDeviceRegistered;
 
     bool m_touchUpdatePending;
     QWindow *m_filterWindow;
 
     struct FilteredTouchPoint {
-        QEvdevTouchFilter x;
-        QEvdevTouchFilter y;
+        EpaperEvdevTouchFilter x;
+        EpaperEvdevTouchFilter y;
         QWindowSystemInterface::TouchPoint touchPoint;
     };
     QHash<int, FilteredTouchPoint> m_filteredPoints;
@@ -113,4 +113,4 @@ private:
 
 QT_END_NAMESPACE
 
-#endif // QEVDEVTOUCH_P_H
+#endif // EPAPEREVDEVTOUCHHANDLER_P_H
