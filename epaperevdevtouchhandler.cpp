@@ -71,7 +71,6 @@ public:
     int hw_pressure_max;
     QString hw_name;
     QString deviceNode;
-    bool m_forceToActiveWindow;
     QTransform m_rotate;
     QString m_screenName;
     mutable QPointer<QScreen> m_screen;
@@ -83,15 +82,8 @@ EpaperEvdevTouchScreenData::EpaperEvdevTouchScreenData(EpaperEvdevTouchScreenHan
       m_currentSlot(0),
       hw_range_x_min(0), hw_range_x_max(0),
       hw_range_y_min(0), hw_range_y_max(0),
-      hw_pressure_min(0), hw_pressure_max(0),
-      m_forceToActiveWindow(false)
-{
-    for (const QString &arg : args) {
-        if (arg == u"force_window") {
-            m_forceToActiveWindow = true;
-        }
-    }
-}
+      hw_pressure_min(0), hw_pressure_max(0)
+{ }
 
 #define LONG_BITS (sizeof(long) << 3)
 #define NUM_LONGS(bits) (((bits) + LONG_BITS - 1) / LONG_BITS)
@@ -547,11 +539,6 @@ void EpaperEvdevTouchScreenData::assignIds()
 
 QRect EpaperEvdevTouchScreenData::screenGeometry() const
 {
-    if (m_forceToActiveWindow) {
-        QWindow *win = QGuiApplication::focusWindow();
-        return win ? QHighDpi::toNativeWindowGeometry(win->geometry(), win) : QRect();
-    }
-
     // Now it becomes tricky. Traditionally we picked the primaryScreen()
     // and were done with it. But then, enter multiple screens, and
     // suddenly it was all broken.
