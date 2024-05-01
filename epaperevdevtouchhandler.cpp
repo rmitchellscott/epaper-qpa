@@ -75,7 +75,6 @@ public:
     QString hw_name;
     QString deviceNode;
     bool m_forceToActiveWindow;
-    bool m_typeB;
     QTransform m_rotate;
     QString m_screenName;
     mutable QPointer<QScreen> m_screen;
@@ -101,7 +100,7 @@ EpaperEvdevTouchScreenData::EpaperEvdevTouchScreenData(EpaperEvdevTouchScreenHan
       hw_range_x_min(0), hw_range_x_max(0),
       hw_range_y_min(0), hw_range_y_max(0),
       hw_pressure_min(0), hw_pressure_max(0),
-      m_forceToActiveWindow(false), m_typeB(false),
+      m_forceToActiveWindow(false),
       m_filtered(false), m_prediction(0)
 {
     for (const QString &arg : args) {
@@ -170,15 +169,14 @@ EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &devi
 
     long absbits[NUM_LONGS(ABS_CNT)];
     if (ioctl(m_fd, EVIOCGBIT(EV_ABS, sizeof(absbits)), absbits) >= 0) {
-        d->m_typeB = testBit(ABS_MT_SLOT, absbits);
+        Q_ASSERT_X(testBit(ABS_MT_SLOT, absbits), "", "type A devices are not supported");
         Q_ASSERT_X(testBit(ABS_MT_POSITION_X, absbits), "", "single touch is not supported");
     }
 
     d->deviceNode = device;
     qCDebug(epaperLcEvdevTouch,
-            "evdevtouch: %ls: Protocol type %c, filtered=%s",
+            "evdevtouch: %ls: filtered=%s",
             qUtf16Printable(d->deviceNode),
-            d->m_typeB ? 'B' : 'A',
             d->m_filtered ? "yes" : "no");
     if (d->m_filtered)
         qCDebug(epaperLcEvdevTouch, " - prediction=%d", d->m_prediction);
@@ -418,48 +416,37 @@ void EpaperEvdevTouchScreenData::processInputEvent(input_event *data)
 
         if (data->code == ABS_MT_POSITION_X) {
             m_currentData.x = qBound(hw_range_x_min, data->value, hw_range_x_max);
-            if (m_typeB) {
-                m_contacts[m_currentSlot].x = m_currentData.x;
-                if (m_contacts[m_currentSlot].state == QEventPoint::State::Stationary)
-                    m_contacts[m_currentSlot].state = QEventPoint::State::Updated;
-            }
+            m_contacts[m_currentSlot].x = m_currentData.x;
+            if (m_contacts[m_currentSlot].state == QEventPoint::State::Stationary)
+                m_contacts[m_currentSlot].state = QEventPoint::State::Updated;
         } else if (data->code == ABS_MT_POSITION_Y) {
             m_currentData.y = qBound(hw_range_y_min, data->value, hw_range_y_max);
-            if (m_typeB) {
-                m_contacts[m_currentSlot].y = m_currentData.y;
-                if (m_contacts[m_currentSlot].state == QEventPoint::State::Stationary)
-                    m_contacts[m_currentSlot].state = QEventPoint::State::Updated;
-            }
+            m_contacts[m_currentSlot].y = m_currentData.y;
+            if (m_contacts[m_currentSlot].state == QEventPoint::State::Stationary)
+                m_contacts[m_currentSlot].state = QEventPoint::State::Updated;
         } else if (data->code == ABS_MT_TRACKING_ID) {
             m_currentData.trackingId = data->value;
-            if (m_typeB) {
-                if (m_currentData.trackingId == -1) {
-                    m_contacts[m_currentSlot].state = QEventPoint::State::Released;
-                } else {
-                    m_contacts[m_currentSlot].state = QEventPoint::State::Pressed;
-                    m_contacts[m_currentSlot].trackingId = m_currentData.trackingId;
-                }
+            if (m_currentData.trackingId == -1) {
+                m_contacts[m_currentSlot].state = QEventPoint::State::Released;
+            } else {
+                m_contacts[m_currentSlot].state = QEventPoint::State::Pressed;
+                m_contacts[m_currentSlot].trackingId = m_currentData.trackingId;
             }
         } else if (data->code == ABS_MT_TOUCH_MAJOR) {
             m_currentData.maj = data->value;
             if (data->value == 0)
                 m_currentData.state = QEventPoint::State::Released;
-            if (m_typeB)
-                m_contacts[m_currentSlot].maj = m_currentData.maj;
+            m_contacts[m_currentSlot].maj = m_currentData.maj;
         } else if (data->code == ABS_PRESSURE || data->code == ABS_MT_PRESSURE) {
             if (Q_UNLIKELY(epaperLcEvents().isDebugEnabled()))
                 qCDebug(epaperLcEvents, "EV_ABS code 0x%x: pressure %d; bounding to [%d,%d]",
                         data->code, data->value, hw_pressure_min, hw_pressure_max);
             m_currentData.pressure = qBound(hw_pressure_min, data->value, hw_pressure_max);
-            if (m_typeB)
-                m_contacts[m_currentSlot].pressure = m_currentData.pressure;
+            m_contacts[m_currentSlot].pressure = m_currentData.pressure;
         } else if (data->code == ABS_MT_SLOT) {
             m_currentSlot = data->value;
         }
 
-    } else if (data->type == EV_KEY && !m_typeB) {
-        if (data->code == BTN_TOUCH && data->value == 0)
-            m_contacts[m_currentSlot].state = QEventPoint::State::Released;
     } else if (data->type == EV_SYN && data->code == SYN_MT_REPORT && m_lastEventType != EV_SYN) {
 
         // If there is no tracking id, one will be generated later.
@@ -498,27 +485,6 @@ void EpaperEvdevTouchScreenData::processInputEvent(input_event *data)
                 continue;
             }
 
-            int key = m_typeB ? it.key() : contact.trackingId;
-            if (!m_typeB && m_lastContacts.contains(key)) {
-                const Contact &prev(m_lastContacts.value(key));
-                if (contact.state == QEventPoint::State::Released) {
-                    // Copy over the previous values for released points, just in case.
-                    contact.x = prev.x;
-                    contact.y = prev.y;
-                    contact.maj = prev.maj;
-                } else {
-                    contact.state = (prev.x == contact.x && prev.y == contact.y)
-                            ? QEventPoint::State::Stationary : QEventPoint::State::Updated;
-                }
-            }
-
-            // Avoid reporting a contact in released state more than once.
-            if (!m_typeB && contact.state == QEventPoint::State::Released
-                    && !m_lastContacts.contains(key)) {
-                it = m_contacts.erase(it);
-                continue;
-            }
-
             if (contact.pressure)
                 hasPressure = true;
 
@@ -529,17 +495,10 @@ void EpaperEvdevTouchScreenData::processInputEvent(input_event *data)
         // Now look for contacts that have disappeared since the last sync.
         for (auto it = m_lastContacts.begin(), end = m_lastContacts.end(); it != end; ++it) {
             Contact &contact(it.value());
-            int key = m_typeB ? it.key() : contact.trackingId;
-            if (m_typeB) {
-                if (contact.trackingId != m_contacts[key].trackingId && contact.state) {
-                    contact.state = QEventPoint::State::Released;
-                    addTouchPoint(contact, &combinedStates);
-                }
-            } else {
-                if (!m_contacts.contains(key)) {
-                    contact.state = QEventPoint::State::Released;
-                    addTouchPoint(contact, &combinedStates);
-                }
+            int key = it.key();
+            if (contact.trackingId != m_contacts[key].trackingId && contact.state) {
+                contact.state = QEventPoint::State::Released;
+                addTouchPoint(contact, &combinedStates);
             }
         }
 
@@ -553,12 +512,7 @@ void EpaperEvdevTouchScreenData::processInputEvent(input_event *data)
             }
 
             if (contact.state == QEventPoint::State::Released) {
-                if (m_typeB) {
-                    contact.state = QEventPoint::State::Unknown;
-                } else {
-                    it = m_contacts.erase(it);
-                    continue;
-                }
+                contact.state = QEventPoint::State::Unknown;
             } else {
                 contact.state = QEventPoint::State::Stationary;
             }
@@ -566,9 +520,6 @@ void EpaperEvdevTouchScreenData::processInputEvent(input_event *data)
         }
 
         m_lastContacts = m_contacts;
-        if (!m_typeB)
-            m_contacts.clear();
-
 
         if (!m_touchPoints.isEmpty() && (hasPressure || combinedStates != QEventPoint::State::Stationary))
             reportPoints();
