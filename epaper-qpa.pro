@@ -20,7 +20,6 @@ HEADERS = \
     epaperbackingstore.h \
     epaperevdevkeyboardhandler.h \
     epaperevdevkeyboardmanager.h \
-    epaperevdevtouchfilter.h \
     epaperevdevtouchhandler.h \
     epaperevdevtouchmanager.h \
     epaperevdevutil.h \

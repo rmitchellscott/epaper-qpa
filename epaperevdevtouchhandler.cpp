@@ -56,9 +56,6 @@ public:
     Contact m_currentData;
     int m_currentSlot;
 
-    double m_timeStamp;
-    double m_lastTimeStamp;
-
     int findClosestContact(const QHash<int, Contact> &contacts, int x, int y, int *dist);
     void addTouchPoint(const Contact &contact, QEventPoint::States *combinedStates);
     void reportPoints();
@@ -78,38 +75,21 @@ public:
     QTransform m_rotate;
     QString m_screenName;
     mutable QPointer<QScreen> m_screen;
-
-    // Touch filtering and prediction are part of the same thing. The default
-    // prediction is 0ms, but sensible results can be achieved by setting it
-    // to, for instance, 16ms.
-    // For filtering to work well, the QPA plugin should provide a dead-steady
-    // implementation of QPlatformWindow::requestUpdate().
-    bool m_filtered;
-    int m_prediction;
-
-    // When filtering is enabled, protect the access to current and last
-    // timeStamp and touchPoints, as these are being read on the gui thread.
-    QMutex m_mutex;
 };
 
 EpaperEvdevTouchScreenData::EpaperEvdevTouchScreenData(EpaperEvdevTouchScreenHandler *q_ptr, const QStringList &args)
     : q(q_ptr),
       m_lastEventType(-1),
       m_currentSlot(0),
-      m_timeStamp(0), m_lastTimeStamp(0),
       hw_range_x_min(0), hw_range_x_max(0),
       hw_range_y_min(0), hw_range_y_max(0),
       hw_pressure_min(0), hw_pressure_max(0),
-      m_forceToActiveWindow(false),
-      m_filtered(false), m_prediction(0)
+      m_forceToActiveWindow(false)
 {
     for (const QString &arg : args) {
-        if (arg == u"force_window")
+        if (arg == u"force_window") {
             m_forceToActiveWindow = true;
-        else if (arg == u"filtered")
-            m_filtered = true;
-        else if (const QStringView prefix = u"prediction="; arg.startsWith(prefix))
-            m_prediction = QStringView(arg).mid(prefix.size()).toInt();
+        }
     }
 }
 
@@ -175,11 +155,8 @@ EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &devi
 
     d->deviceNode = device;
     qCDebug(epaperLcEvdevTouch,
-            "evdevtouch: %ls: filtered=%s",
-            qUtf16Printable(d->deviceNode),
-            d->m_filtered ? "yes" : "no");
-    if (d->m_filtered)
-        qCDebug(epaperLcEvdevTouch, " - prediction=%d", d->m_prediction);
+            "evdevtouch: %ls",
+            qUtf16Printable(d->deviceNode));
 
     input_absinfo absInfo;
     memset(&absInfo, 0, sizeof(input_absinfo));
@@ -267,11 +244,6 @@ EpaperEvdevTouchScreenHandler::~EpaperEvdevTouchScreenHandler()
     delete d;
 
     unregisterPointingDevice();
-}
-
-bool EpaperEvdevTouchScreenHandler::isFiltered() const
-{
-    return d && d->m_filtered;
 }
 
 QPointingDevice *EpaperEvdevTouchScreenHandler::touchDevice() const
@@ -464,14 +436,6 @@ void EpaperEvdevTouchScreenData::processInputEvent(input_event *data)
         if (!m_contacts.isEmpty() && m_contacts.constBegin().value().trackingId == -1)
             assignIds();
 
-        std::unique_lock<QMutex> locker;
-        if (m_filtered)
-            locker = std::unique_lock<QMutex>{m_mutex};
-
-        // update timestamps
-        m_lastTimeStamp = m_timeStamp;
-        m_timeStamp = data->input_event_sec + data->input_event_usec / 1000000.0;
-
         m_lastTouchPoints = m_touchPoints;
         m_touchPoints.clear();
         QEventPoint::States combinedStates;
@@ -652,18 +616,12 @@ void EpaperEvdevTouchScreenData::reportPoints()
             qCDebug(epaperLcEvents) << "reporting" << tp;
     }
 
-    // Let qguiapp pick the target window.
-    if (m_filtered)
-        emit q->touchPointsUpdated();
-    else
-        QWindowSystemInterface::handleTouchEvent(nullptr, q->touchDevice(), m_touchPoints);
+    // nullptr means QGuiApplication will pick the target window.
+    QWindowSystemInterface::handleTouchEvent(nullptr, q->touchDevice(), m_touchPoints);
 }
 
 EpaperEvdevTouchScreenHandlerThread::EpaperEvdevTouchScreenHandlerThread(const QString &device, const QString &spec, QObject *parent)
     : QDaemonThread(parent), m_device(device), m_spec(spec), m_handler(nullptr), m_touchDeviceRegistered(false)
-    , m_touchUpdatePending(false)
-    , m_filterWindow(nullptr)
-    , m_touchRate(-1)
 {
     start();
 }
@@ -677,9 +635,6 @@ EpaperEvdevTouchScreenHandlerThread::~EpaperEvdevTouchScreenHandlerThread()
 void EpaperEvdevTouchScreenHandlerThread::run()
 {
     m_handler = new EpaperEvdevTouchScreenHandler(m_device, m_spec);
-
-    if (m_handler->isFiltered())
-        connect(m_handler, &EpaperEvdevTouchScreenHandler::touchPointsUpdated, this, &EpaperEvdevTouchScreenHandlerThread::scheduleTouchPointUpdate);
 
     // Report the registration to the parent thread by invoking the method asynchronously
     QMetaObject::invokeMethod(this, "notifyTouchDeviceRegistered", Qt::QueuedConnection);
@@ -700,139 +655,6 @@ void EpaperEvdevTouchScreenHandlerThread::notifyTouchDeviceRegistered()
     m_touchDeviceRegistered = true;
     emit touchDeviceRegistered();
 }
-
-void EpaperEvdevTouchScreenHandlerThread::scheduleTouchPointUpdate()
-{
-    QWindow *window = QGuiApplication::focusWindow();
-    if (window != m_filterWindow) {
-        if (m_filterWindow)
-            m_filterWindow->removeEventFilter(this);
-        m_filterWindow = window;
-        if (m_filterWindow)
-            m_filterWindow->installEventFilter(this);
-    }
-    if (m_filterWindow) {
-        m_touchUpdatePending = true;
-        m_filterWindow->requestUpdate();
-    }
-}
-
-bool EpaperEvdevTouchScreenHandlerThread::eventFilter(QObject *object, QEvent *event)
-{
-    if (m_touchUpdatePending && object == m_filterWindow && event->type() == QEvent::UpdateRequest) {
-        m_touchUpdatePending = false;
-        filterAndSendTouchPoints();
-    }
-    return false;
-}
-
-void EpaperEvdevTouchScreenHandlerThread::filterAndSendTouchPoints()
-{
-    QRect winRect = m_handler->d->screenGeometry();
-    if (winRect.isNull())
-        return;
-
-    float vsyncDelta = 1.0f / QGuiApplication::primaryScreen()->refreshRate();
-
-    QHash<int, FilteredTouchPoint> filteredPoints;
-
-    m_handler->d->m_mutex.lock();
-
-    double time = m_handler->d->m_timeStamp;
-    double lastTime = m_handler->d->m_lastTimeStamp;
-    double touchDelta = time - lastTime;
-    if (m_touchRate < 0 || touchDelta > vsyncDelta) {
-        // We're at the very start, with nothing to go on, so make a guess
-        // that the touch rate will be somewhere in the range of half a vsync.
-        // This doesn't have to be accurate as we will calibrate it over time,
-        // but it gives us a better starting point so calibration will be
-        // slightly quicker. If, on the other hand, we already have an
-        // estimate, we'll leave it as is and keep it.
-        if (m_touchRate < 0)
-            m_touchRate = (1.0 / QGuiApplication::primaryScreen()->refreshRate()) / 2.0;
-
-    } else {
-        // Update our estimate for the touch rate. We're making the assumption
-        // that this value will be mostly accurate with the occasional bump,
-        // so we're weighting the existing value high compared to the update.
-        const double ratio = 0.9;
-        m_touchRate = sqrt(m_touchRate * m_touchRate * ratio + touchDelta * touchDelta * (1.0 - ratio));
-    }
-
-    QList<QWindowSystemInterface::TouchPoint> points = m_handler->d->m_touchPoints;
-    QList<QWindowSystemInterface::TouchPoint> lastPoints = m_handler->d->m_lastTouchPoints;
-
-    m_handler->d->m_mutex.unlock();
-
-    for (int i=0; i<points.size(); ++i) {
-        QWindowSystemInterface::TouchPoint &tp = points[i];
-        QPointF pos = tp.normalPosition;
-        FilteredTouchPoint f;
-
-        QWindowSystemInterface::TouchPoint ltp;
-        ltp.id = -1;
-        for (int j=0; j<lastPoints.size(); ++j) {
-            if (lastPoints.at(j).id == tp.id) {
-                ltp = lastPoints.at(j);
-                break;
-            }
-        }
-
-        QPointF velocity;
-        if (lastTime != 0 && ltp.id >= 0)
-            velocity = (pos - ltp.normalPosition) / m_touchRate;
-        if (m_filteredPoints.contains(tp.id)) {
-            f = m_filteredPoints.take(tp.id);
-            f.x.update(pos.x(), velocity.x(), vsyncDelta);
-            f.y.update(pos.y(), velocity.y(), vsyncDelta);
-            pos = QPointF(f.x.position(), f.y.position());
-        } else {
-            f.x.initialize(pos.x(), velocity.x());
-            f.y.initialize(pos.y(), velocity.y());
-            // Make sure the first instance of a touch point we send has the
-            // 'pressed' state.
-            if (tp.state != QEventPoint::State::Pressed)
-                tp.state = QEventPoint::State::Pressed;
-        }
-
-        tp.velocity = QVector2D(f.x.velocity() * winRect.width(), f.y.velocity() * winRect.height());
-
-        qreal filteredNormalizedX = f.x.position() + f.x.velocity() * m_handler->d->m_prediction / 1000.0;
-        qreal filteredNormalizedY = f.y.position() + f.y.velocity() * m_handler->d->m_prediction / 1000.0;
-
-        // Clamp to the screen
-        tp.normalPosition = QPointF(qBound<qreal>(0, filteredNormalizedX, 1),
-                                    qBound<qreal>(0, filteredNormalizedY, 1));
-
-        qreal x = winRect.x() + (tp.normalPosition.x() * (winRect.width() - 1));
-        qreal y = winRect.y() + (tp.normalPosition.y() * (winRect.height() - 1));
-
-        tp.area.moveCenter(QPointF(x, y));
-
-        // Store the touch point for later so we can release it if we've
-        // missed the actual release between our last update and this.
-        f.touchPoint = tp;
-
-        // Don't store the point for future reference if it is a release.
-        if (tp.state != QEventPoint::State::Released)
-            filteredPoints[tp.id] = f;
-    }
-
-    for (QHash<int, FilteredTouchPoint>::const_iterator it = m_filteredPoints.constBegin(), end = m_filteredPoints.constEnd(); it != end; ++it) {
-        const FilteredTouchPoint &f = it.value();
-        QWindowSystemInterface::TouchPoint tp = f.touchPoint;
-        tp.state = QEventPoint::State::Released;
-        tp.velocity = QVector2D();
-        points.append(tp);
-    }
-
-    m_filteredPoints = filteredPoints;
-
-    QWindowSystemInterface::handleTouchEvent(nullptr,
-                                             m_handler->touchDevice(),
-                                             points);
-}
-
 
 QT_END_NAMESPACE
 

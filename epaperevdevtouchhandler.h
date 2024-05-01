@@ -25,7 +25,6 @@
 #include <QThread>
 #include <QtCore/private/qthread_p.h>
 #include <qpa/qwindowsysteminterface.h>
-#include "epaperevdevtouchfilter.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -42,8 +41,6 @@ public:
     ~EpaperEvdevTouchScreenHandler();
 
     QPointingDevice *touchDevice() const;
-
-    bool isFiltered() const;
 
     void readData();
 
@@ -73,10 +70,6 @@ public:
 
     bool isPointingDeviceRegistered() const;
 
-    bool eventFilter(QObject *object, QEvent *event) override;
-
-    void scheduleTouchPointUpdate();
-
 signals:
     void touchDeviceRegistered();
 
@@ -90,18 +83,6 @@ private:
     QString m_spec;
     EpaperEvdevTouchScreenHandler *m_handler;
     bool m_touchDeviceRegistered;
-
-    bool m_touchUpdatePending;
-    QWindow *m_filterWindow;
-
-    struct FilteredTouchPoint {
-        EpaperEvdevTouchFilter x;
-        EpaperEvdevTouchFilter y;
-        QWindowSystemInterface::TouchPoint touchPoint;
-    };
-    QHash<int, FilteredTouchPoint> m_filteredPoints;
-
-    float m_touchRate;
 };
 
 QT_END_NAMESPACE
