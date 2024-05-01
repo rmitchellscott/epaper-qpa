@@ -27,10 +27,6 @@
 #include <qpa/qwindowsysteminterface.h>
 #include "epaperevdevtouchfilter.h"
 
-#if QT_CONFIG(mtdev)
-struct mtdev;
-#endif
-
 QT_BEGIN_NAMESPACE
 
 class QSocketNotifier;
@@ -65,9 +61,6 @@ private:
     int m_fd;
     EpaperEvdevTouchScreenData *d;
     QPointingDevice *m_device;
-#if QT_CONFIG(mtdev)
-    mtdev *m_mtdev;
-#endif
 };
 
 class EpaperEvdevTouchScreenHandlerThread : public QDaemonThread
