@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "epaperevdevkeyboardmanager.h"
+#include "epaperevdevutil.h"
 
 #include <QCoreApplication>
 #include <QLoggingCategory>
@@ -49,40 +50,6 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(qLcEvdevKey)
-
-// This code is originally from QEvdevUtil, extracted to keep this code independent.
-namespace EpaperEvdevUtil {
-
-struct ParsedSpecification
-{
-    QString spec;
-    QList<QString> devices;
-    QList<QString> args;
-};
-
-ParsedSpecification parseSpecification(const QString &specification)
-{
-    ParsedSpecification result;
-
-    result.args = specification.split(QLatin1Char(':'));
-
-    for (const QStringView &arg : qAsConst(result.args)) {
-        if (arg.startsWith(QString("/dev/"))) {
-            // if device is specified try to use it
-            result.devices.append(arg.toString());
-        } else {
-            // build new specification without /dev/ elements
-            result.spec += arg.toString() + QLatin1Char(':');
-        }
-    }
-
-    if (!result.spec.isEmpty())
-        result.spec.chop(1); // remove trailing ':'
-
-    return result;
-}
-
-}
 
 EpaperEvdevKeyboardManager::EpaperEvdevKeyboardManager(const QString &key, const QString &specification, QObject *parent) :
     QObject(parent)
