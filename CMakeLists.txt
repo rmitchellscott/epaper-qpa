@@ -3,11 +3,12 @@ project(epaper)
 
 include(FeatureSummary)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui DeviceDiscoverySupportPrivate InputSupportPrivate)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Test DeviceDiscoverySupportPrivate InputSupportPrivate)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_AUTOMOC ON)
+include(CTest)
 
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
@@ -44,6 +45,8 @@ add_library(epaper
     map/epaperevdevkeyboardmap_us_rm.h
 )
 
+target_include_directories(epaper PUBLIC .)
+
 target_link_libraries(epaper
     Qt6::Core
     Qt6::Gui
@@ -53,3 +56,7 @@ target_link_libraries(epaper
 )
 set(QT6_PLATFORMS_PLUGIN_DIR lib/qt6/plugins/platforms CACHE STRING "Plugin install dir")
 install(TARGETS epaper DESTINATION ${QT6_PLATFORMS_PLUGIN_DIR})
+
+add_executable(tst_touch tests/tst_touch.cpp)
+target_link_libraries(tst_touch PUBLIC epaper Qt6::Test)
+add_test(NAME tst_touch COMMAND tst_touch)
