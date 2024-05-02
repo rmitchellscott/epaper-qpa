@@ -83,22 +83,7 @@ EpaperEvdevTouchScreenData::EpaperEvdevTouchScreenData(EpaperEvdevTouchScreenHan
       hw_range_x_min(0), hw_range_x_max(0),
       hw_range_y_min(0), hw_range_y_max(0),
       hw_pressure_min(0), hw_pressure_max(0)
-{ }
-
-#define LONG_BITS (sizeof(long) << 3)
-#define NUM_LONGS(bits) (((bits) + LONG_BITS - 1) / LONG_BITS)
-
-static inline bool testBit(long bit, const long *array)
 {
-    return (array[bit / LONG_BITS] >> bit % LONG_BITS) & 1;
-}
-
-EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &device, const QString &spec, QObject *parent)
-    : QObject(parent), m_notify(nullptr), m_fd(-1), d(nullptr), m_device(nullptr)
-{
-    setObjectName("Evdev Touch Handler"_L1);
-
-    const QStringList args = spec.split(u':');
     int rotationAngle = 0;
     bool invertx = false;
     bool inverty = false;
@@ -125,6 +110,31 @@ EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &devi
         }
     }
 
+    if (rotationAngle) {
+        m_rotate = QTransform::fromTranslate(0.5, 0.5).rotate(rotationAngle).translate(-0.5, -0.5);
+    }
+
+    if (invertx) {
+        m_rotate *= QTransform::fromTranslate(0.5, 0.5).scale(-1.0, 1.0).translate(-0.5, -0.5);
+    }
+
+    if (inverty) {
+        m_rotate *= QTransform::fromTranslate(0.5, 0.5).scale(1.0, -1.0).translate(-0.5, -0.5);
+    }
+}
+
+#define LONG_BITS (sizeof(long) << 3)
+#define NUM_LONGS(bits) (((bits) + LONG_BITS - 1) / LONG_BITS)
+
+static inline bool testBit(long bit, const long *array)
+{
+    return (array[bit / LONG_BITS] >> bit % LONG_BITS) & 1;
+}
+
+EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &device, const QString &spec, QObject *parent)
+    : QObject(parent), m_notify(nullptr), m_fd(-1), d(nullptr), m_device(nullptr)
+{
+    setObjectName("Evdev Touch Handler"_L1);
     qCDebug(epaperLcEvdevTouch, "evdevtouch: Using device %ls", qUtf16Printable(device));
 
     m_fd = QT_OPEN(device.toLocal8Bit().constData(), O_RDONLY | O_NDELAY, 0);
@@ -137,6 +147,7 @@ EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &devi
         return;
     }
 
+    const QStringList args = spec.split(u':');
     d = new EpaperEvdevTouchScreenData(this, args);
 
     long absbits[NUM_LONGS(ABS_CNT)];
@@ -207,15 +218,6 @@ EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &devi
         ioctl(m_fd, EVIOCGRAB, (void *) 0);
     else
         qWarning("evdevtouch: The device is grabbed by another process. No events will be read.");
-
-    if (rotationAngle)
-        d->m_rotate = QTransform::fromTranslate(0.5, 0.5).rotate(rotationAngle).translate(-0.5, -0.5);
-
-    if (invertx)
-        d->m_rotate *= QTransform::fromTranslate(0.5, 0.5).scale(-1.0, 1.0).translate(-0.5, -0.5);
-
-    if (inverty)
-        d->m_rotate *= QTransform::fromTranslate(0.5, 0.5).scale(1.0, -1.0).translate(-0.5, -0.5);
 
     QOutputMapping *mapping = QOutputMapping::get();
     if (mapping->load()) {
