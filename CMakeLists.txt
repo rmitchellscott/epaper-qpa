@@ -17,6 +17,7 @@ add_library(epaper
     epaperbackingstore.cpp
     epaperevdevkeyboardhandler.cpp
     epaperevdevkeyboardmanager.cpp
+    epaperevdevtouchscreendata.cpp
     epaperevdevtouchhandler.cpp
     epaperevdevtouchmanager.cpp
     epaperevdevutil.cpp
@@ -28,6 +29,7 @@ add_library(epaper
     epaperevdevkeyboardmanager.h
     epaperevdevtouchhandler.h
     epaperevdevtouchmanager.h
+    epaperevdevtouchscreendata.h
     epaperevdevutil.h
     epaperintegration.h
 
