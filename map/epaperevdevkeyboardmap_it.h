@@ -65,100 +65,81 @@
 namespace EpaperEvdevKeyboardMap {
 namespace Locale {
 
-struct France {
+struct Italy {
 constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { 1, 0xffff, 0x01000000, 0x00, 0x00, 0x0000 },
 
     // KEY_1 (2)
-    // "&" Ampersand 0x0026
     // "1" Digit One 0x0031
-    { KEY_1, 0x0026, Qt::Key_Ampersand, 0x00, 0x00, 0x0000 },
-    { KEY_1, 0x0031, Qt::Key_1, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_1, 0x0031, Qt::Key_1 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
+    // "!" Exclamation Mark 0x0021
+    { KEY_1, 0x0031, Qt::Key_1, 0x00, 0x00, 0x0000 },
+    { KEY_1, 0x0021, Qt::Key_Exclam, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_2 (3)
-    // "é" Latin Small Letter E with Acute 0x00e9
     // "2" Digit Two 0x0032
-    // "̃ " Combining Tilde 0x0303
-    { KEY_2, 0x00e9, Qt::Key_Eacute, 0x00, Flags::IsCapsLockException, 0x0000 },
-    { KEY_2, 0x0032, Qt::Key_2, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_2, 0x0303, Qt::Key_Dead_Tilde, Modifiers::ModAlt, Flags::IsDead, 0x0000 },
-    { KEY_2, 0x0303, Qt::Key_Dead_Tilde, Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
-    { KEY_2, 0x0032, Qt::Key_2 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
+    // """ Quotation Mark 0x0022
+    { KEY_2, 0x0032, Qt::Key_2, 0x00, 0x00, 0x0000 },
+    { KEY_2, 0x0022, Qt::Key_QuoteDbl, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_3 (4)
-    // """ Quotation Mark 0x0022
     // "3" Digit Three 0x0033
-    // "#" Number Sign 0x0023
-    { KEY_3, 0x0022, Qt::Key_QuoteDbl, 0x00, 0x00, 0x0000 },
-    { KEY_3, 0x0033, Qt::Key_3, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_3, 0x0023, Qt::Key_NumberSign, Modifiers::ModAlt, 0x00, 0x0000 },
-    { KEY_3, 0x0023, Qt::Key_NumberSign, Modifiers::ModAltGr, 0x00, 0x0000 },
-    { KEY_3, 0x0033, Qt::Key_3 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
+    // "£" Pound Sign 0x00a3
+    { KEY_3, 0x0033, Qt::Key_3, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_3, 0x00a3, Qt::Key_sterling, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_4 (5)
-    // "'" Apostrophe 0x0027
     // "4" Digit Four 0x0034
-    { KEY_4, 0x0027, Qt::Key_Apostrophe, 0x00, 0x00, 0x0000 },
-    { KEY_4, 0x0034, Qt::Key_4, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_4, 0x0034, Qt::Key_4 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
+    // "$" Dollar Sign 0x0024
+    { KEY_4, 0x0034, Qt::Key_4, 0x00, 0x00, 0x0000 },
+    { KEY_4, 0x0024, Qt::Key_Dollar, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_5 (6)
-    // "(" Left Parenthesis 0x0028
     // "5" Digit Five 0x0035
-    { KEY_5, 0x0028, Qt::Key_ParenLeft, 0x00, 0x00, 0x0000 },
-    { KEY_5, 0x0035, Qt::Key_5, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_5, 0x0035, Qt::Key_5 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
+    // "%" Percent Sign 0x0025
+    { KEY_5, 0x0035, Qt::Key_5, 0x00, 0x00, 0x0000 },
+    { KEY_5, 0x0025, Qt::Key_Percent, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_6 (7)
-    // "-" Hyphen-Minus 0x002d
     // "6" Digit Six 0x0036
-    { KEY_6, 0x002d, Qt::Key_hyphen, 0x00, 0x00, 0x0000 },
-    { KEY_6, 0x0036, Qt::Key_6, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_6, 0x0036, Qt::Key_6 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
+    // "&" Ampersand 0x0026
+    { KEY_6, 0x0036, Qt::Key_6, 0x00, 0x00, 0x0000 },
+    { KEY_6, 0x0026, Qt::Key_Ampersand, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_7 (8)
-    // "è" Latin Small Letter E with Grave 0x00e8
     // "7" Digit Seven 0x0037
-    { KEY_7, 0x00e8, Qt::Key_Egrave, 0x00, Flags::IsCapsLockException, 0x0000 },
-    { KEY_7, 0x0037, Qt::Key_7, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_7, 0x0037, Qt::Key_7 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
+    // "/" Solidus 0x002f
+    { KEY_7, 0x0037, Qt::Key_7, 0x00, 0x00, 0x0000 },
+    { KEY_7, 0x002F, Qt::Key_Slash, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_8 (9)
-    // "_" Low Line 0x005f
     // "8" Digit Eight 0x0038
-    { KEY_8, 0x005f, Qt::Key_Underscore, 0x00, 0x00, 0x0000 },
-    { KEY_8, 0x0038, Qt::Key_8, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_8, 0x0038, Qt::Key_8 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
+    // "(" Left Parenthesis 0x0028
+    { KEY_8, 0x0038, Qt::Key_8, 0x00, 0x00, 0x0000 },
+    { KEY_8, 0x0028, Qt::Key_ParenLeft, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_9 (10)
-    // "ç" Latin Small Letter C with Cedilla 0x00e7
     // "9" Digit Nine 0x0039
-    { KEY_9, 0x00e7, Qt::Key_Ccedilla, 0x00, Flags::IsCapsLockException, 0x0000 },
-    { KEY_9, 0x0039, Qt::Key_9, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_9, 0x0039, Qt::Key_9 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
+    // ")" Right Parenthesis 0x0029
+    { KEY_9, 0x0039, Qt::Key_9, 0x00, 0x00, 0x0000 },
+    { KEY_9, 0x0029, Qt::Key_ParenRight, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_0 (11)
-    // "à" Latin Small Letter a with Grave 0x00e0
     // "0" Digit Zero 0x0030
-    // "@" Commercial At 0x0040
-    { KEY_0, 0x00e0, Qt::Key_Agrave, 0x00, Flags::IsCapsLockException, 0x0000 },
-    { KEY_0, 0x0030, Qt::Key_0, Modifiers::ModShift, 0x00, 0x0000 },
-    { KEY_0, 0x0040, Qt::Key_At, Modifiers::ModAlt, 0x00, 0x0000 },
-    { KEY_0, 0x0040, Qt::Key_At, Modifiers::ModAltGr, 0x00, 0x0000 },
-    { KEY_0, 0x0040, Qt::Key_0 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
+    // "=" Equals Sign 0x003d
+    { KEY_0, 0x0030, Qt::Key_0, 0x00, 0x00, 0x0000 },
+    { KEY_0, 0x003D, Qt::Key_Equal, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_MINUS (12)
-    // "(" Left Parenthesis 0x0028
-    // "º" Masculine Ordinal Indicator 0x00ba
-    { KEY_MINUS, Qt::Key_ParenLeft, Modifiers::ModPlain, 0x00, 0x0000 },
-    { KEY_MINUS, 0x00ba, Qt::Key_masculine, Modifiers::ModShift, 0x00, 0x0000 },
+    // "'" Apostrophe 0x0027
+    // "?" Question Mark 0x003f
+    { KEY_MINUS, 0x0027, Qt::Key_Apostrophe, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_MINUS, 0x003f, Qt::Key_Question, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_EQUAL (13)
-    // "=" Equals Sign 0x003d
-    // "+" Plus Sign 0x002b
-    { KEY_EQUAL, 0x003d, Qt::Key_Equal, Modifiers::ModPlain, 0x00, 0x0000 },
-    { KEY_EQUAL, 0x002b, Qt::Key_Plus, Modifiers::ModShift, 0x00, 0x0000 },
+    // "ì" Latin Small Letter I with Grave 0x00ec
+    // "^" Combining Circumflex Accent 0x0302 (Dead Key)
+    { KEY_EQUAL, 0x00ec, Qt::Key_Igrave, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
+    { KEY_EQUAL, 0x0302, Qt::Key_Dead_Circumflex, Modifiers::ModShift, Flags::IsDead, 0x0000 },
 
     // KEY_BACKSPACE (14)
     { KEY_BACKSPACE, 0xffff, Qt::Key_Backspace, 0x00, 0x00, 0x0000 },
@@ -168,21 +149,17 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_TAB, 0xffff, 0x01000001, 0x00, 0x00, 0x0000 },
 
     // KEY_Q (16)
-    // "a" Latin Small Letter A 0x0061
-    // "A" Latin Capital Letter A 0x0041
-    { KEY_Q, 0x0061, 0x00000041, 0x00, 0x02, 0x0000 },
-    { KEY_Q, 0x0041, 0x00000041, 0x01, 0x02, 0x0000 },
+    { KEY_Q, 0x0071, 0x00000051, 0x00, 0x02, 0x0000 },
+    { KEY_Q, 0x0051, 0x00000051, 0x01, 0x02, 0x0000 },
 
     // KEY_W (17)
-    // "z" Latin Small Letter Z 0x007a
-    // "Z" Latin Capital Letter Z 0x005a
-    { KEY_W, 0x007a, 0x0000005a, 0x00, 0x02, 0x0000 },
-    { KEY_W, 0x005a, 0x0000005a, 0x01, 0x02, 0x0000 },
+    { KEY_W, 0x0077, 0x00000057, 0x00, 0x02, 0x0000 },
+    { KEY_W, 0x0057, 0x00000057, 0x01, 0x02, 0x0000 },
 
     // KEY_E (18)
     // "€" Euro Sign 0x20ac
-    { KEY_E, 0x0065, Qt::Key_E, Modifiers::ModPlain, Flags::IsLetter, 0x0000 },
-    { KEY_E, 0x0045, Qt::Key_E, Modifiers::ModShift, Flags::IsLetter, 0x0000 },
+    { KEY_E, 0x0065, 0x00000045, Modifiers::ModPlain, Flags::IsLetter, 0x0000 },
+    { KEY_E, 0x0045, 0x00000045, Modifiers::ModShift, Flags::IsLetter, 0x0000 },
     { KEY_E, 0x20ac, 0x00000045, Modifiers::ModAlt, 0x00, 0x0000 }, // No Euro sign on Qt::Key?
     { KEY_E, 0x20ac, 0x00000045, Modifiers::ModAltGr, 0x00, 0x0000 },
 
@@ -215,15 +192,15 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_P, 0x0050, 0x00000050, 0x01, 0x02, 0x0000 },
 
     // KEY_LEFTBRACE (26)
-    // "^" Combining Circumflex Accent 0x0302 (Dead Key)
-    // "¨" Combining Diaeresis 0x0308 (Dead Key)
-    { KEY_LEFTBRACE, 0x0302, Qt::Key_Dead_Circumflex, Modifiers::ModPlain, Flags::IsDead, 0x0000 },
-    { KEY_LEFTBRACE, 0x0308, Qt::Key_Dead_Diaeresis, Modifiers::ModShift, Flags::IsDead, 0x0000 },
+    // "é" Latin Small Letter E with Acute 0x00e9
+    // "è" Latin Small Letter E with Grave 0x00e8
+    { KEY_LEFTBRACE, 0x00e9, Qt::Key_Eacute, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
+    { KEY_LEFTBRACE, 0x00e8, Qt::Key_Egrave, Modifiers::ModShift, Flags::IsCapsLockException, 0x0000 },
 
     // KEY_RIGHTBRACE (27)
-    // "$" Dollar Sign 0x0024
+    // "+" Plus Sign 0x002b
     // "*" Asterisk 0x002a
-    { KEY_RIGHTBRACE, 0x0024, Qt::Key_Dollar, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_RIGHTBRACE, 0x002b, Qt::Key_Plus, Modifiers::ModPlain, 0x00, 0x0000 },
     { KEY_RIGHTBRACE, 0x002a, Qt::Key_Asterisk, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_ENTER (28)
@@ -232,11 +209,10 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     // KEY_LEFTCTRL (29)
     { KEY_LEFTCTRL, 0xffff, 0x01000021, 0x00, 0x04, 0x0004 }, // 0x04 => Flags::IsModifier, 0x0004 => Modifiers::ModControl, so apply ModControl when KEY_LEFTCTRL is pressed?
 
+    // FIXME(modifiers)
     // KEY_A (30)
-    // "q" Latin Small Letter Q 0x0071
-    // "Q" Latin Capital Letter Q 0x0051
-    { KEY_A, 0x0071, 0x00000051, 0x00, 0x02, 0x0000 },
-    { KEY_A, 0x0051, 0x00000051, 0x01, 0x02, 0x0000 },
+    { KEY_A, 0x0061, 0x00000041, 0x00, 0x02, 0x0000 },
+    { KEY_A, 0x0041, 0x00000041, 0x01, 0x02, 0x0000 },
 
     // KEY_S (31)
     { KEY_S, 0x0073, 0x00000053, 0x00, 0x02, 0x0000 },
@@ -270,25 +246,29 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_L, 0x006c, 0x0000004c, 0x00, 0x02, 0x0000 },
     { KEY_L, 0x004c, 0x0000004c, 0x01, 0x02, 0x0000 },
 
-    // FIXME(modifiers)
     // KEY_SEMICOLON (39)
-    // "m" Latin Small Letter M 0x006d
-    // "M" Latin Capital Letter M 0x004d
-    { KEY_SEMICOLON, 0x006d, Qt::Key_M, Modifiers::ModPlain, Flags::IsLetter, 0x0000 },
-    { KEY_SEMICOLON, 0x004d, Qt::Key_M, Modifiers::ModShift, Flags::IsLetter, 0x0000 },
+    // "ò" Latin Small Letter O with Grave 0x00f2
+    // "ç" Latin Small Letter C with Cedilla 0x00e7
+    // "@" Commercial At 0x0040
+    { KEY_SEMICOLON, 0x00f2, Qt::Key_Ograve, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
+    { KEY_SEMICOLON, 0x00e7, Qt::Key_Ccedilla, Modifiers::ModShift, Flags::IsCapsLockException, 0x0000 },
+    { KEY_SEMICOLON, 0x0040, Qt::Key_At, Modifiers::ModAlt, 0x00, 0x0000 },
+    { KEY_SEMICOLON, 0x0040, Qt::Key_At, Modifiers::ModAltGr, 0x00, 0x0000 },
 
-    // FIXME(modifiers)
     // KEY_APOSTROPHE (40)
-    // "ù" Latin Small Letter U with Grave 0x00f9
-    // "%" Percent Sign 0x0025
-    { KEY_APOSTROPHE, 0x00f9, Qt::Key_Ugrave, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
-    { KEY_APOSTROPHE, 0x0025, Qt::Key_Percent, Modifiers::ModShift, Flags::IsDead, 0x0000 },
+    // "à" Latin Small Letter a with Grave 0x00e0
+    // "º" Masculine Ordinal Indicator 0x00ba
+    // "#" Number Sign 0x0023
+    { KEY_APOSTROPHE, 0x00e0, Qt::Key_Agrave, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
+    { KEY_APOSTROPHE, 0x00ba, Qt::Key_masculine, Modifiers::ModShift, 0x00, 0x0000 },
+    { KEY_APOSTROPHE, 0x0023, Qt::Key_NumberSign, Modifiers::ModAlt, 0x00, 0x0000 },
+    { KEY_APOSTROPHE, 0x0023, Qt::Key_NumberSign, Modifiers::ModAltGr, 0x00, 0x0000 },
 
     // KEY_GRAVE (41)
-    // "`" Combining Grave Accent 0x0300 (Dead Key)
-    // "£" Pound Sign 0x00a3
-    { KEY_GRAVE, 0x0300, Qt::Key_Dead_Grave, Modifiers::ModPlain, Flags::IsDead, 0x0000 },
-    { KEY_GRAVE, 0x00a3, Qt::Key_sterling, Modifiers::ModShift, 0x00, 0x0000 },
+    // "ù" Latin Small Letter U with Grave 0x00f9
+    // "§" Section Sign 0x00a7
+    { KEY_GRAVE, 0x00f9, Qt::Key_Ugrave, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
+    { KEY_GRAVE, 0x00a7, Qt::Key_section, Modifiers::ModShift, 0x00, 0x0000 },
 
     { KEY_LEFTSHIFT, 0xffff, 0x01000020, 0x00, 0x04, 0x0001 },
 
@@ -299,16 +279,12 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_BACKSLASH, 0x003e, Qt::Key_Greater, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_Z (44)
-    // "w" Latin Small Letter W 0x0077
-    // "W" Latin Capital Letter W 0x0057
-    { KEY_Z, 0x0077, Qt::Key_W, 0x00, Flags::IsLetter, 0x0000 },
-    { KEY_Z, 0x0057, Qt::Key_W, 0x01, Flags::IsLetter, 0x0000 },
+    { KEY_Z, 0x007a, Qt::Key_Z, Modifiers::ModPlain, Flags::IsLetter, 0x0000 },
+    { KEY_Z, 0x005a, Qt::Key_Z, Modifiers::ModShift, Flags::IsLetter, 0x0000 },
 
     // KEY_X (45)
-    // "x" 0x0078
-    // "X" 0x0058
-    { KEY_X, 0x0078, Qt::Key_X, 0x00, Flags::IsLetter, 0x0000 },
-    { KEY_X, 0x0058, Qt::Key_X, 0x01, Flags::IsLetter, 0x0000 },
+    { KEY_X, 0x0078, Qt::Key_X, Modifiers::ModPlain, Flags::IsLetter, 0x0000 },
+    { KEY_X, 0x0058, Qt::Key_X, Modifiers::ModShift, Flags::IsLetter, 0x0000 },
 
     // KEY_C (46)
     { KEY_C, 0x0063, 0x00000043, 0x00, 0x02, 0x0000 },
@@ -326,31 +302,28 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_N, 0x006e, 0x0000004e, 0x00, 0x02, 0x0000 },
     { KEY_N, 0x004e, 0x0000004e, 0x01, 0x02, 0x0000 },
 
-    // FIXME(modifiers)
     // KEY_M (50)
-    // "," Comma 0x002c
-    // "?" Question Mark 0x003f
-    { KEY_M, 0x002c, Qt::Key_Comma, Modifiers::ModPlain, 0x00, 0x0000 },
-    { KEY_M, 0x003f, Qt::Key_Question, Modifiers::ModShift, 0x00, 0x0000 },
+    { KEY_M, 0x006d, 0x0000004d, 0x00, 0x02, 0x0000 },
+    { KEY_M, 0x004d, 0x0000004d, 0x01, 0x02, 0x0000 },
 
     // KEY_COMMA (51)
+    // "," Comma 0x002c
     // ";" Semicolon 0x003b
-    // "." Full Stop 0x002e
-    { KEY_COMMA, 0x003b, Qt::Key_Semicolon, 0x00, 0x00, 0x0000 },
-    { KEY_COMMA, 0x002e, Qt::Key_Period, 0x01, 0x00, 0x0000 },
+    { KEY_COMMA, 0x002c, Qt::Key_Comma, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_COMMA, 0x003b, Qt::Key_Semicolon, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_DOT (52)
+    // "." Full Stop 0x002e
     // ":" Colon 0x003a
-    // "/" Solidus 0x002f
-    { KEY_DOT, 0x003a, Qt::Key_Colon, 0x00, 0x00, 0x0000 },
-    { KEY_DOT, 0x002f, Qt::Key_Slash, 0x01, 0x00, 0x0000 },
+    { KEY_DOT, 0x002e, Qt::Key_Period, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_DOT, 0x003a, Qt::Key_Colon, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_SLASH (53)
-    // "!" Exclamation Mark 0x0021
-    // "§" Section Sign 0x00a7
-    { KEY_SLASH, 0x0021, Qt::Key_Exclam, Modifiers::ModPlain, 0x00, 0x0000 },
-    { KEY_SLASH, 0x00a7, Qt::Key_section, Modifiers::ModShift, 0x00, 0x0000 },
-    
+    // "-" Hyphen-Minus 0x002d
+    // "_" Low Line 0x005f
+    { KEY_SLASH, 0x002d, Qt::Key_Minus, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_SLASH, 0x005f, Qt::Key_Underscore, Modifiers::ModShift, 0x00, 0x0000 },
+
     // KEY_RIGHTSHIFT (54)
     { KEY_RIGHTSHIFT, 0xffff, 0x01000020, 0x00, 0x04, 0x0001 },
 
@@ -513,10 +486,12 @@ constexpr static size_t keymapSize = sizeof(keymap) / sizeof(keymap[0]);
 
 #include <tuple>
 
-// This struct exists only for French as of now; letters à, ç, è, é and ù
-// are only printed in uppercase when caps lock is on (but not with shift).
-// Merci français, for being so special!
+// Letters ì, é, è, ò, ç, à and ù are printed in uppercase only on caps lock (not shift).
 static constexpr std::pair<quint16, quint16> capsLockException[] = {
+    // "ì" Latin Small Letter I with Grave 0x00ec
+    // "ì" Latin Capital Letter I with Grave 0x00cc
+    {0x00ec, 0x00cc},
+
     // "é" Latin Small Letter E with Acute 0x00e9
     // "É" Latin Capital Letter E with Acute 0x00c9
     {0x00e9, 0x00c9},
@@ -524,6 +499,10 @@ static constexpr std::pair<quint16, quint16> capsLockException[] = {
     // "è" Latin Small Letter E with Grave 0x00e8
     // "È" Latin Capital Letter E with Grave 0x00c8
     {0x00e8, 0x00c8},
+
+    // "ò" Latin Small Letter O with Grave 0x00f2
+    // "ò" Latin Capital Letter O with Grave 0x00d2
+    {0x00f2, 0x00d2},
 
     // "ç" Latin Small Letter C with Cedilla 0x00e7
     // "Ç" Latin Capital Letter C with Cedilla 0x00c7
