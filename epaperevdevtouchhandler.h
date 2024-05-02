@@ -58,6 +58,10 @@ private:
     int m_fd;
     EpaperEvdevTouchScreenData *d;
     QPointingDevice *m_device;
+    QString m_screenName;
+    QString m_deviceNode;
+    QString m_hw_name;
+    mutable QPointer<QScreen> m_screen;
 };
 
 class EpaperEvdevTouchScreenHandlerThread : public QDaemonThread
