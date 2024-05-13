@@ -28,8 +28,7 @@ public:
         QEventPoint::State state = QEventPoint::State::Pressed;
     };
 
-    QHash<int, Contact> m_contacts; // The key is a tracking id for type A, slot number for type B.
-    QHash<int, Contact> m_lastContacts;
+    QHash<int, Contact> m_contacts; // The key is a slot number for type B. Type A is unsupported.
     Contact m_currentData;
     int m_currentSlot;
 

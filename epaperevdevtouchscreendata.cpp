@@ -156,16 +156,6 @@ void EpaperEvdevTouchScreenData::reportPoints()
         ++it;
     }
 
-    // Now look for contacts that have disappeared since the last sync.
-    for (auto it = m_lastContacts.begin(), end = m_lastContacts.end(); it != end; ++it) {
-        Contact &contact(it.value());
-        int key = it.key();
-        if (contact.trackingId != m_contacts[key].trackingId && contact.state) {
-            contact.state = QEventPoint::State::Released;
-            addTouchPoint(contact, &combinedStates);
-        }
-    }
-
     // Remove contacts that have just been reported as released.
     for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; /*erasing*/) {
         Contact &contact(it.value());
@@ -182,8 +172,6 @@ void EpaperEvdevTouchScreenData::reportPoints()
         }
         ++it;
     }
-
-    m_lastContacts = m_contacts;
 
     // Nothing of value to report...
     if (touchPoints.isEmpty() || !(hasPressure || combinedStates != QEventPoint::State::Stationary)) {
