@@ -54,30 +54,6 @@ EpaperEvdevTouchScreenData::EpaperEvdevTouchScreenData(const QStringList &args)
     }
 }
 
-void EpaperEvdevTouchScreenData::addTouchPoint(const Contact &contact, QEventPoint::States *combinedStates)
-{
-    QWindowSystemInterface::TouchPoint tp;
-    tp.id = contact.trackingId;
-    tp.state = contact.state;
-    *combinedStates |= tp.state;
-
-    // Store the HW coordinates for now, will be updated later.
-    tp.area = QRectF(0, 0, contact.maj, contact.maj);
-    tp.area.moveCenter(QPoint(contact.x, contact.y));
-    tp.pressure = contact.pressure;
-
-    // Get a normalized position in range 0..1.
-    tp.normalPosition = QPointF((contact.x - hw_range_x_min) / qreal(hw_range_x_max - hw_range_x_min),
-                                (contact.y - hw_range_y_min) / qreal(hw_range_y_max - hw_range_y_min));
-
-    if (!m_rotate.isIdentity())
-        tp.normalPosition = m_rotate.map(tp.normalPosition);
-
-    tp.rawPositions.append(QPointF(contact.x, contact.y));
-
-    m_touchPoints.append(tp);
-}
-
 void EpaperEvdevTouchScreenData::processInputEvent(const input_event *data)
 {
     if (data->type == EV_ABS) {
@@ -127,122 +103,93 @@ void EpaperEvdevTouchScreenData::processInputEvent(const input_event *data)
         m_currentData = Contact();
 
     } else if (data->type == EV_SYN && data->code == SYN_REPORT) {
-
-        // Ensure valid IDs even when the driver does not report ABS_MT_TRACKING_ID.
-        if (!m_contacts.isEmpty() && m_contacts.constBegin().value().trackingId == -1)
-            assignIds();
-
-        m_lastTouchPoints = m_touchPoints;
-        m_touchPoints.clear();
-        QEventPoint::States combinedStates;
-        bool hasPressure = false;
-
-        for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; /*erasing*/) {
-            Contact &contact(it.value());
-
-            if (!contact.state) {
-                ++it;
-                continue;
-            }
-
-            if (contact.pressure)
-                hasPressure = true;
-
-            addTouchPoint(contact, &combinedStates);
-            ++it;
-        }
-
-        // Now look for contacts that have disappeared since the last sync.
-        for (auto it = m_lastContacts.begin(), end = m_lastContacts.end(); it != end; ++it) {
-            Contact &contact(it.value());
-            int key = it.key();
-            if (contact.trackingId != m_contacts[key].trackingId && contact.state) {
-                contact.state = QEventPoint::State::Released;
-                addTouchPoint(contact, &combinedStates);
-            }
-        }
-
-        // Remove contacts that have just been reported as released.
-        for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; /*erasing*/) {
-            Contact &contact(it.value());
-
-            if (!contact.state) {
-                ++it;
-                continue;
-            }
-
-            if (contact.state == QEventPoint::State::Released) {
-                contact.state = QEventPoint::State::Unknown;
-            } else {
-                contact.state = QEventPoint::State::Stationary;
-            }
-            ++it;
-        }
-
-        m_lastContacts = m_contacts;
-
-        if (!m_touchPoints.isEmpty() && (hasPressure || combinedStates != QEventPoint::State::Stationary))
-            reportPoints();
+        reportPoints();
     }
 
     m_lastEventType = data->type;
 }
 
-int EpaperEvdevTouchScreenData::findClosestContact(const QHash<int, Contact> &contacts, int x, int y, int *dist)
-{
-    int minDist = -1, id = -1;
-    for (QHash<int, Contact>::const_iterator it = contacts.constBegin(), ite = contacts.constEnd();
-         it != ite; ++it) {
-        const Contact &contact(it.value());
-        int dx = x - contact.x;
-        int dy = y - contact.y;
-        int dist = dx * dx + dy * dy;
-        if (minDist == -1 || dist < minDist) {
-            minDist = dist;
-            id = contact.trackingId;
-        }
-    }
-    if (dist)
-        *dist = minDist;
-    return id;
-}
-
-void EpaperEvdevTouchScreenData::assignIds()
-{
-    QHash<int, Contact> candidates = m_lastContacts, pending = m_contacts, newContacts;
-    int maxId = -1;
-    QHash<int, Contact>::iterator it, ite, bestMatch;
-    while (!pending.isEmpty() && !candidates.isEmpty()) {
-        int bestDist = -1, bestId = 0;
-        for (it = pending.begin(), ite = pending.end(); it != ite; ++it) {
-            int dist;
-            int id = findClosestContact(candidates, it->x, it->y, &dist);
-            if (id >= 0 && (bestDist == -1 || dist < bestDist)) {
-                bestDist = dist;
-                bestId = id;
-                bestMatch = it;
-            }
-        }
-        if (bestDist >= 0) {
-            bestMatch->trackingId = bestId;
-            newContacts.insert(bestId, *bestMatch);
-            candidates.remove(bestId);
-            pending.erase(bestMatch);
-            if (bestId > maxId)
-                maxId = bestId;
-        }
-    }
-    if (candidates.isEmpty()) {
-        for (it = pending.begin(), ite = pending.end(); it != ite; ++it) {
-            it->trackingId = ++maxId;
-            newContacts.insert(it->trackingId, *it);
-        }
-    }
-    m_contacts = newContacts;
-}
-
 void EpaperEvdevTouchScreenData::reportPoints()
 {
+    // If this breaks, the driver isn't reporting ABS_MT_TRACKING_ID correctly.
+    Q_ASSERT(m_contacts.isEmpty() || m_contacts.constBegin().value().trackingId != -1);
+
+    QList<QWindowSystemInterface::TouchPoint> touchPoints;
+    const auto& addTouchPoint = [this, &touchPoints](const Contact &contact, QEventPoint::States *combinedStates) {
+        QWindowSystemInterface::TouchPoint tp;
+        tp.id = contact.trackingId;
+        tp.state = contact.state;
+        *combinedStates |= tp.state;
+
+        // Store the HW coordinates for now, will be updated later.
+        tp.area = QRectF(0, 0, contact.maj, contact.maj);
+        tp.area.moveCenter(QPoint(contact.x, contact.y));
+        tp.pressure = contact.pressure;
+
+        // Get a normalized position in range 0..1.
+        tp.normalPosition = QPointF((contact.x - hw_range_x_min) / qreal(hw_range_x_max - hw_range_x_min),
+                                    (contact.y - hw_range_y_min) / qreal(hw_range_y_max - hw_range_y_min));
+
+        if (!m_rotate.isIdentity())
+            tp.normalPosition = m_rotate.map(tp.normalPosition);
+
+        tp.rawPositions.append(QPointF(contact.x, contact.y));
+
+        touchPoints.append(tp);
+    };
+
+    QEventPoint::States combinedStates;
+    bool hasPressure = false;
+
+    for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; /*erasing*/) {
+        Contact &contact(it.value());
+
+        if (!contact.state) {
+            ++it;
+            continue;
+        }
+
+        if (contact.pressure)
+            hasPressure = true;
+
+        addTouchPoint(contact, &combinedStates);
+        ++it;
+    }
+
+    // Now look for contacts that have disappeared since the last sync.
+    for (auto it = m_lastContacts.begin(), end = m_lastContacts.end(); it != end; ++it) {
+        Contact &contact(it.value());
+        int key = it.key();
+        if (contact.trackingId != m_contacts[key].trackingId && contact.state) {
+            contact.state = QEventPoint::State::Released;
+            addTouchPoint(contact, &combinedStates);
+        }
+    }
+
+    // Remove contacts that have just been reported as released.
+    for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; /*erasing*/) {
+        Contact &contact(it.value());
+
+        if (!contact.state) {
+            ++it;
+            continue;
+        }
+
+        if (contact.state == QEventPoint::State::Released) {
+            contact.state = QEventPoint::State::Unknown;
+        } else {
+            contact.state = QEventPoint::State::Stationary;
+        }
+        ++it;
+    }
+
+    m_lastContacts = m_contacts;
+
+    // Nothing of value to report...
+    if (touchPoints.isEmpty() || !(hasPressure || combinedStates != QEventPoint::State::Stationary)) {
+        return;
+    }
+
     QRect winRect = m_screenGeometry;
     if (winRect.isNull())
         return;
@@ -252,9 +199,9 @@ void EpaperEvdevTouchScreenData::reportPoints()
 
     // Map the coordinates based on the normalized position. QPA expects 'area'
     // to be in screen coordinates.
-    const int pointCount = m_touchPoints.size();
+    const int pointCount = touchPoints.size();
     for (int i = 0; i < pointCount; ++i) {
-        QWindowSystemInterface::TouchPoint &tp(m_touchPoints[i]);
+        QWindowSystemInterface::TouchPoint &tp(touchPoints[i]);
 
         // Generate a screen position that is always inside the active window
         // or the primary screen.  Even though we report this as a QRectF, internally
@@ -278,6 +225,6 @@ void EpaperEvdevTouchScreenData::reportPoints()
             qCDebug(epaperLcEvents) << "reporting" << tp;
     }
 
-    emit pointsChanged(m_touchPoints);
+    emit pointsChanged(touchPoints);
 }
 
