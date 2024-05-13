@@ -141,6 +141,10 @@ void EpaperEvdevTouchScreenData::reportPoints()
     QEventPoint::States combinedStates;
     bool hasPressure = false;
 
+    // TODO: it would be nice to consider how we can guard against some insanity here...
+    // an example might be getting a release for a not-yet-pressed point.
+    // stuff like this probably points to a kernel problem, but would be useful to
+    // guard userspace from them if we can.
     for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; ++it) {
         Contact &contact(it.value());
 
