@@ -17,8 +17,6 @@ signals:
 
 public:
     int m_lastEventType;
-    QList<QWindowSystemInterface::TouchPoint> m_touchPoints;
-    QList<QWindowSystemInterface::TouchPoint> m_lastTouchPoints;
 
     struct Contact
     {

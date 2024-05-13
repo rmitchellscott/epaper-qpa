@@ -54,30 +54,6 @@ EpaperEvdevTouchScreenData::EpaperEvdevTouchScreenData(const QStringList &args)
     }
 }
 
-void EpaperEvdevTouchScreenData::addTouchPoint(const Contact &contact, QEventPoint::States *combinedStates)
-{
-    QWindowSystemInterface::TouchPoint tp;
-    tp.id = contact.trackingId;
-    tp.state = contact.state;
-    *combinedStates |= tp.state;
-
-    // Store the HW coordinates for now, will be updated later.
-    tp.area = QRectF(0, 0, contact.maj, contact.maj);
-    tp.area.moveCenter(QPoint(contact.x, contact.y));
-    tp.pressure = contact.pressure;
-
-    // Get a normalized position in range 0..1.
-    tp.normalPosition = QPointF((contact.x - hw_range_x_min) / qreal(hw_range_x_max - hw_range_x_min),
-                                (contact.y - hw_range_y_min) / qreal(hw_range_y_max - hw_range_y_min));
-
-    if (!m_rotate.isIdentity())
-        tp.normalPosition = m_rotate.map(tp.normalPosition);
-
-    tp.rawPositions.append(QPointF(contact.x, contact.y));
-
-    m_touchPoints.append(tp);
-}
-
 void EpaperEvdevTouchScreenData::processInputEvent(const input_event *data)
 {
     if (data->type == EV_ABS) {
@@ -138,8 +114,30 @@ void EpaperEvdevTouchScreenData::reportPoints()
     // If this breaks, the driver isn't reporting ABS_MT_TRACKING_ID correctly.
     Q_ASSERT(m_contacts.isEmpty() || m_contacts.constBegin().value().trackingId != -1);
 
-    m_lastTouchPoints = m_touchPoints;
-    m_touchPoints.clear();
+    QList<QWindowSystemInterface::TouchPoint> touchPoints;
+    const auto& addTouchPoint = [this, &touchPoints](const Contact &contact, QEventPoint::States *combinedStates) {
+        QWindowSystemInterface::TouchPoint tp;
+        tp.id = contact.trackingId;
+        tp.state = contact.state;
+        *combinedStates |= tp.state;
+
+        // Store the HW coordinates for now, will be updated later.
+        tp.area = QRectF(0, 0, contact.maj, contact.maj);
+        tp.area.moveCenter(QPoint(contact.x, contact.y));
+        tp.pressure = contact.pressure;
+
+        // Get a normalized position in range 0..1.
+        tp.normalPosition = QPointF((contact.x - hw_range_x_min) / qreal(hw_range_x_max - hw_range_x_min),
+                                    (contact.y - hw_range_y_min) / qreal(hw_range_y_max - hw_range_y_min));
+
+        if (!m_rotate.isIdentity())
+            tp.normalPosition = m_rotate.map(tp.normalPosition);
+
+        tp.rawPositions.append(QPointF(contact.x, contact.y));
+
+        touchPoints.append(tp);
+    };
+
     QEventPoint::States combinedStates;
     bool hasPressure = false;
 
@@ -188,7 +186,7 @@ void EpaperEvdevTouchScreenData::reportPoints()
     m_lastContacts = m_contacts;
 
     // Nothing of value to report...
-    if (m_touchPoints.isEmpty() || !(hasPressure || combinedStates != QEventPoint::State::Stationary)) {
+    if (touchPoints.isEmpty() || !(hasPressure || combinedStates != QEventPoint::State::Stationary)) {
         return;
     }
 
@@ -201,9 +199,9 @@ void EpaperEvdevTouchScreenData::reportPoints()
 
     // Map the coordinates based on the normalized position. QPA expects 'area'
     // to be in screen coordinates.
-    const int pointCount = m_touchPoints.size();
+    const int pointCount = touchPoints.size();
     for (int i = 0; i < pointCount; ++i) {
-        QWindowSystemInterface::TouchPoint &tp(m_touchPoints[i]);
+        QWindowSystemInterface::TouchPoint &tp(touchPoints[i]);
 
         // Generate a screen position that is always inside the active window
         // or the primary screen.  Even though we report this as a QRectF, internally
@@ -227,6 +225,6 @@ void EpaperEvdevTouchScreenData::reportPoints()
             qCDebug(epaperLcEvents) << "reporting" << tp;
     }
 
-    emit pointsChanged(m_touchPoints);
+    emit pointsChanged(touchPoints);
 }
 
