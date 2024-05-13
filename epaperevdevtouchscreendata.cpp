@@ -133,64 +133,10 @@ void EpaperEvdevTouchScreenData::processInputEvent(const input_event *data)
     m_lastEventType = data->type;
 }
 
-int EpaperEvdevTouchScreenData::findClosestContact(const QHash<int, Contact> &contacts, int x, int y, int *dist)
-{
-    int minDist = -1, id = -1;
-    for (QHash<int, Contact>::const_iterator it = contacts.constBegin(), ite = contacts.constEnd();
-         it != ite; ++it) {
-        const Contact &contact(it.value());
-        int dx = x - contact.x;
-        int dy = y - contact.y;
-        int dist = dx * dx + dy * dy;
-        if (minDist == -1 || dist < minDist) {
-            minDist = dist;
-            id = contact.trackingId;
-        }
-    }
-    if (dist)
-        *dist = minDist;
-    return id;
-}
-
-void EpaperEvdevTouchScreenData::assignIds()
-{
-    QHash<int, Contact> candidates = m_lastContacts, pending = m_contacts, newContacts;
-    int maxId = -1;
-    QHash<int, Contact>::iterator it, ite, bestMatch;
-    while (!pending.isEmpty() && !candidates.isEmpty()) {
-        int bestDist = -1, bestId = 0;
-        for (it = pending.begin(), ite = pending.end(); it != ite; ++it) {
-            int dist;
-            int id = findClosestContact(candidates, it->x, it->y, &dist);
-            if (id >= 0 && (bestDist == -1 || dist < bestDist)) {
-                bestDist = dist;
-                bestId = id;
-                bestMatch = it;
-            }
-        }
-        if (bestDist >= 0) {
-            bestMatch->trackingId = bestId;
-            newContacts.insert(bestId, *bestMatch);
-            candidates.remove(bestId);
-            pending.erase(bestMatch);
-            if (bestId > maxId)
-                maxId = bestId;
-        }
-    }
-    if (candidates.isEmpty()) {
-        for (it = pending.begin(), ite = pending.end(); it != ite; ++it) {
-            it->trackingId = ++maxId;
-            newContacts.insert(it->trackingId, *it);
-        }
-    }
-    m_contacts = newContacts;
-}
-
 void EpaperEvdevTouchScreenData::reportPoints()
 {
-    // Ensure valid IDs even when the driver does not report ABS_MT_TRACKING_ID.
-    if (!m_contacts.isEmpty() && m_contacts.constBegin().value().trackingId == -1)
-        assignIds();
+    // If this breaks, the driver isn't reporting ABS_MT_TRACKING_ID correctly.
+    Q_ASSERT(m_contacts.isEmpty() || m_contacts.constBegin().value().trackingId != -1);
 
     m_lastTouchPoints = m_touchPoints;
     m_touchPoints.clear();

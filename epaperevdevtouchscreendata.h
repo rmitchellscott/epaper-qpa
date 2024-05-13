@@ -11,7 +11,6 @@ public:
     EpaperEvdevTouchScreenData(const QStringList& args);
 
     void processInputEvent(const input_event* data);
-    void assignIds();
 
 signals:
     void pointsChanged(const QList<QWindowSystemInterface::TouchPoint>& points);
@@ -36,7 +35,6 @@ public:
     Contact m_currentData;
     int m_currentSlot;
 
-    int findClosestContact(const QHash<int, Contact>& contacts, int x, int y, int* dist);
     void addTouchPoint(const Contact& contact, QEventPoint::States* combinedStates);
     void reportPoints();
     void loadMultiScreenMappings();
