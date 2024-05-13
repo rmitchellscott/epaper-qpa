@@ -127,62 +127,7 @@ void EpaperEvdevTouchScreenData::processInputEvent(const input_event *data)
         m_currentData = Contact();
 
     } else if (data->type == EV_SYN && data->code == SYN_REPORT) {
-
-        // Ensure valid IDs even when the driver does not report ABS_MT_TRACKING_ID.
-        if (!m_contacts.isEmpty() && m_contacts.constBegin().value().trackingId == -1)
-            assignIds();
-
-        m_lastTouchPoints = m_touchPoints;
-        m_touchPoints.clear();
-        QEventPoint::States combinedStates;
-        bool hasPressure = false;
-
-        for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; /*erasing*/) {
-            Contact &contact(it.value());
-
-            if (!contact.state) {
-                ++it;
-                continue;
-            }
-
-            if (contact.pressure)
-                hasPressure = true;
-
-            addTouchPoint(contact, &combinedStates);
-            ++it;
-        }
-
-        // Now look for contacts that have disappeared since the last sync.
-        for (auto it = m_lastContacts.begin(), end = m_lastContacts.end(); it != end; ++it) {
-            Contact &contact(it.value());
-            int key = it.key();
-            if (contact.trackingId != m_contacts[key].trackingId && contact.state) {
-                contact.state = QEventPoint::State::Released;
-                addTouchPoint(contact, &combinedStates);
-            }
-        }
-
-        // Remove contacts that have just been reported as released.
-        for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; /*erasing*/) {
-            Contact &contact(it.value());
-
-            if (!contact.state) {
-                ++it;
-                continue;
-            }
-
-            if (contact.state == QEventPoint::State::Released) {
-                contact.state = QEventPoint::State::Unknown;
-            } else {
-                contact.state = QEventPoint::State::Stationary;
-            }
-            ++it;
-        }
-
-        m_lastContacts = m_contacts;
-
-        if (!m_touchPoints.isEmpty() && (hasPressure || combinedStates != QEventPoint::State::Stationary))
-            reportPoints();
+        reportPoints();
     }
 
     m_lastEventType = data->type;
@@ -243,6 +188,64 @@ void EpaperEvdevTouchScreenData::assignIds()
 
 void EpaperEvdevTouchScreenData::reportPoints()
 {
+    // Ensure valid IDs even when the driver does not report ABS_MT_TRACKING_ID.
+    if (!m_contacts.isEmpty() && m_contacts.constBegin().value().trackingId == -1)
+        assignIds();
+
+    m_lastTouchPoints = m_touchPoints;
+    m_touchPoints.clear();
+    QEventPoint::States combinedStates;
+    bool hasPressure = false;
+
+    for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; /*erasing*/) {
+        Contact &contact(it.value());
+
+        if (!contact.state) {
+            ++it;
+            continue;
+        }
+
+        if (contact.pressure)
+            hasPressure = true;
+
+        addTouchPoint(contact, &combinedStates);
+        ++it;
+    }
+
+    // Now look for contacts that have disappeared since the last sync.
+    for (auto it = m_lastContacts.begin(), end = m_lastContacts.end(); it != end; ++it) {
+        Contact &contact(it.value());
+        int key = it.key();
+        if (contact.trackingId != m_contacts[key].trackingId && contact.state) {
+            contact.state = QEventPoint::State::Released;
+            addTouchPoint(contact, &combinedStates);
+        }
+    }
+
+    // Remove contacts that have just been reported as released.
+    for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; /*erasing*/) {
+        Contact &contact(it.value());
+
+        if (!contact.state) {
+            ++it;
+            continue;
+        }
+
+        if (contact.state == QEventPoint::State::Released) {
+            contact.state = QEventPoint::State::Unknown;
+        } else {
+            contact.state = QEventPoint::State::Stationary;
+        }
+        ++it;
+    }
+
+    m_lastContacts = m_contacts;
+
+    // Nothing of value to report...
+    if (m_touchPoints.isEmpty() || !(hasPressure || combinedStates != QEventPoint::State::Stationary)) {
+        return;
+    }
+
     QRect winRect = m_screenGeometry;
     if (winRect.isNull())
         return;
