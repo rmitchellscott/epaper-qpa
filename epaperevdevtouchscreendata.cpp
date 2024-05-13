@@ -141,36 +141,26 @@ void EpaperEvdevTouchScreenData::reportPoints()
     QEventPoint::States combinedStates;
     bool hasPressure = false;
 
-    for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; /*erasing*/) {
+    for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; ++it) {
         Contact &contact(it.value());
 
         if (!contact.state) {
-            ++it;
             continue;
         }
 
-        if (contact.pressure)
+        if (contact.pressure) {
             hasPressure = true;
+        }
 
         addTouchPoint(contact, &combinedStates);
-        ++it;
-    }
 
-    // Remove contacts that have just been reported as released.
-    for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; /*erasing*/) {
-        Contact &contact(it.value());
-
-        if (!contact.state) {
-            ++it;
-            continue;
-        }
-
+        // Ensure the state is correctly reset if we just reported a release.
+        // If it wasn't released, reset it to stationary, so we can detect moves next time.
         if (contact.state == QEventPoint::State::Released) {
             contact.state = QEventPoint::State::Unknown;
         } else {
             contact.state = QEventPoint::State::Stationary;
         }
-        ++it;
     }
 
     // Nothing of value to report...
