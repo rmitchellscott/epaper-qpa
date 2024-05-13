@@ -35,6 +35,12 @@ struct TouchStreamBuilder
         return *this;
     }
 
+    TouchStreamBuilder& mtToolType(timeval tt, int32_t value)
+    {
+        m_events.append({.time = tt, .type = EV_ABS, .code = ABS_MT_TOOL_TYPE, value = value});
+        return *this;
+    }
+
     TouchStreamBuilder& mtPressure(timeval tt, int32_t value)
     {
         m_events.append({.time = tt, .type = EV_ABS, .code = ABS_MT_PRESSURE, value = value});
@@ -101,6 +107,15 @@ QList<input_event> TouchStreamBuilder::fromEvtestOutput(const QByteArray& evtest
         }
 
         if (auto matches = getMatches(
+                line, R"(Event: time (\d+\.\d+), type 3 \(EV_ABS\), code 55 \(ABS_MT_TOOL_TYPE\), value (\-?\d+))");
+            matches) {
+            // match(1) is the time, but we don't use that now.
+            int32_t value = matches->at(2).toInt();
+            builder.mtToolType({}, value);
+            continue;
+        }
+
+        if (auto matches = getMatches(
                 line, R"(Event: time (\d+\.\d+), type 3 \(EV_ABS\), code 53 \(ABS_MT_POSITION_X\), value (\d+))");
             matches) {
             // match(1) is the time, but we don't use that now.
@@ -118,6 +133,15 @@ QList<input_event> TouchStreamBuilder::fromEvtestOutput(const QByteArray& evtest
             continue;
         }
 
+        if (auto matches =
+                getMatches(line, R"(Event: time (\d+\.\d+), type 3 \(EV_ABS\), code 47 \(ABS_MT_SLOT\), value (\d+))");
+            matches) {
+            // match(1) is the time, but we don't use that now.
+            int32_t value = matches->at(2).toInt();
+            builder.mtSlot({}, value);
+            continue;
+        }
+
         if (auto matches = getMatches(
                 line, R"(Event: time (\d+\.\d+), type 3 \(EV_ABS\), code 48 \(ABS_MT_TOUCH_MAJOR\), value (\d+))");
             matches) {
@@ -131,6 +155,11 @@ QList<input_event> TouchStreamBuilder::fromEvtestOutput(const QByteArray& evtest
             matches) {
             // match(1) is the time, but we don't use that now.
             builder.synReport({});
+            continue;
+        }
+
+        if (auto matches = getMatches(line, R"(Event: time (\d+\.\d+), type 1 \(EV_KEY\), .+)"); matches) {
+            // we don't care about EV_KEY
             continue;
         }
 
@@ -252,13 +281,58 @@ std::optional<QString> pointsEqualOrError(const QWindowSystemInterface::TouchPoi
     return {};
 }
 
+struct TouchTestEvent
+{
+private:
+    TouchTestEvent()
+    {
+    }
+
+public:
+    TouchTestEvent(const QList<QWindowSystemInterface::TouchPoint>& points) :
+        m_points(points)
+    {
+    }
+
+    TouchTestEvent(const QWindowSystemInterface::TouchPoint& point) :
+        m_points({point})
+    {
+    }
+
+    static TouchTestEvent cancel()
+    {
+        return {};
+    }
+
+    bool isCancel() const
+    {
+        return !m_points.has_value();
+    }
+
+    bool isTouch() const
+    {
+        return m_points.has_value();
+    }
+
+    QList<QWindowSystemInterface::TouchPoint> points() const
+    {
+        Q_ASSERT(!isCancel());
+        return m_points.value();
+    }
+
+private:
+    // In the case of a 'cancel' event, the points will !has_value.
+    std::optional<QList<QWindowSystemInterface::TouchPoint>> m_points;
+};
+
 void TouchTest::test_data()
 {
-    QTest::addColumn<QList<input_event>>("events");
-    QTest::addColumn<QList<QList<QWindowSystemInterface::TouchPoint>>>("points");
+    QTest::addColumn<QList<input_event>>("inputEvents");
+    QTest::addColumn<QList<TouchTestEvent>>("touchEvents");
 
-    QTest::addRow("no-events") << TouchStreamBuilder().build() << QList<QList<QWindowSystemInterface::TouchPoint>>{};
+    QTest::addRow("no-events") << TouchStreamBuilder().build() << QList<TouchTestEvent>{};
 
+    // A single finger press and release
     QTest::addRow("ferrari-single-press-release")
         << TouchStreamBuilder::fromEvtestOutput(
                R"(
@@ -272,30 +346,138 @@ Event: time 1714664083.898798, -------------- SYN_REPORT ------------
 Event: time 1714664083.974675, type 3 (EV_ABS), code 57 (ABS_MT_TRACKING_ID), value -1
 Event: time 1714664083.974675, -------------- SYN_REPORT ------------
 )")
-        << QList<QList<QWindowSystemInterface::TouchPoint>>{{TouchPointBuilder()
-                                                                 .id(259)
-                                                                 .area({313.809, 1068.03, 6.17647, 6.17647})
-                                                                 .normalPosition({0.195736, 0.142655})
-                                                                 .state(QEventPoint::State::Pressed)
-                                                                 .appendRawPosition({404, 1405})
-                                                                 .pressure(1.0)
-                                                                 .build()},
-                                                            {TouchPointBuilder()
-                                                                 .id(259)
-                                                                 .area({312.265, 1066.48, 9.26471, 9.26471})
-                                                                 .normalPosition({0.195736, 0.142655})
-                                                                 .state(QEventPoint::State::Released)
-                                                                 .appendRawPosition({404, 1405})
-                                                                 .pressure(0.0)
-                                                                 .build()}};
+        << QList<TouchTestEvent>{{TouchPointBuilder()
+                                      .id(259)
+                                      .area({313.809, 1068.03, 6.17647, 6.17647})
+                                      .normalPosition({0.195736, 0.142655})
+                                      .state(QEventPoint::State::Pressed)
+                                      .appendRawPosition({404, 1405})
+                                      .pressure(1.0)
+                                      .build()},
+                                 {TouchPointBuilder()
+                                      .id(259)
+                                      .area({312.265, 1066.48, 9.26471, 9.26471})
+                                      .normalPosition({0.195736, 0.142655})
+                                      .state(QEventPoint::State::Released)
+                                      .appendRawPosition({404, 1405})
+                                      .pressure(0.0)
+                                      .build()}};
+
+    // A single palm press and release
+    QTest::addRow("ferrari-palm-press-release") << TouchStreamBuilder::fromEvtestOutput(
+        R"(
+Event: time 1715601393.060013, type 3 (EV_ABS), code 57 (ABS_MT_TRACKING_ID), value 0
+Event: time 1715601393.060013, type 3 (EV_ABS), code 55 (ABS_MT_TOOL_TYPE), value 2
+Event: time 1715601393.060013, type 3 (EV_ABS), code 53 (ABS_MT_POSITION_X), value 1368
+Event: time 1715601393.060013, type 3 (EV_ABS), code 54 (ABS_MT_POSITION_Y), value 2156
+Event: time 1715601393.060013, type 3 (EV_ABS), code 48 (ABS_MT_TOUCH_MAJOR), value 12
+Event: time 1715601393.060013, type 1 (EV_KEY), code 330 (BTN_TOUCH), value 1
+Event: time 1715601393.060013, -------------- SYN_REPORT ------------
+Event: time 1715601393.072162, type 3 (EV_ABS), code 48 (ABS_MT_TOUCH_MAJOR), value 42
+Event: time 1715601393.072162, -------------- SYN_REPORT ------------
+Event: time 1715601393.171312, type 3 (EV_ABS), code 48 (ABS_MT_TOUCH_MAJOR), value 12
+Event: time 1715601393.171312, -------------- SYN_REPORT ------------
+Event: time 1715601397.257059, type 3 (EV_ABS), code 57 (ABS_MT_TRACKING_ID), value -1
+Event: time 1715601397.257059, type 1 (EV_KEY), code 330 (BTN_TOUCH), value 0
+Event: time 1715601397.257059, -------------- SYN_REPORT ------------
+)") << QList<TouchTestEvent>{};
+
+    // A single finger is pressed, and transitions to palm
+    QTest::addRow("ferrari-finger-to-palm-press-release")
+        << TouchStreamBuilder::fromEvtestOutput(
+               R"(
+Event: time 1715601393.060013, type 3 (EV_ABS), code 57 (ABS_MT_TRACKING_ID), value 0
+Event: time 1715601393.060013, type 3 (EV_ABS), code 55 (ABS_MT_TOOL_TYPE), value 1
+Event: time 1715601393.060013, type 3 (EV_ABS), code 53 (ABS_MT_POSITION_X), value 1368
+Event: time 1715601393.060013, type 3 (EV_ABS), code 54 (ABS_MT_POSITION_Y), value 2156
+Event: time 1715601393.060013, type 3 (EV_ABS), code 48 (ABS_MT_TOUCH_MAJOR), value 12
+Event: time 1715601393.060013, type 1 (EV_KEY), code 330 (BTN_TOUCH), value 1
+Event: time 1715601393.060013, -------------- SYN_REPORT ------------
+Event: time 1715601393.072162, type 3 (EV_ABS), code 55 (ABS_MT_TOOL_TYPE), value 2
+Event: time 1715601393.072162, type 3 (EV_ABS), code 48 (ABS_MT_TOUCH_MAJOR), value 42
+Event: time 1715601393.072162, -------------- SYN_REPORT ------------
+Event: time 1715601393.171312, type 3 (EV_ABS), code 48 (ABS_MT_TOUCH_MAJOR), value 12
+Event: time 1715601393.171312, -------------- SYN_REPORT ------------
+Event: time 1715601397.257059, type 3 (EV_ABS), code 57 (ABS_MT_TRACKING_ID), value -1
+Event: time 1715601397.257059, type 1 (EV_KEY), code 330 (BTN_TOUCH), value 0
+Event: time 1715601397.257059, -------------- SYN_REPORT ------------
+)")
+        << QList<TouchTestEvent>{TouchTestEvent{TouchPointBuilder()
+                                                    .id(0)
+                                                    .area({1068.43, 1639.01, 9.26471, 9.26471})
+                                                    .normalPosition({0.662791, 0.761299})
+                                                    .state(QEventPoint::State::Pressed)
+                                                    .appendRawPosition({1368, 2156})
+                                                    .pressure(1.0)
+                                                    .build()},
+                                 TouchTestEvent::cancel()};
+
+    // Single point press
+    // Then palm press and release, while first point remains in contact.
+    QTest::addRow("ferrari-finger-and-palm-press-release")
+        << TouchStreamBuilder::fromEvtestOutput(
+               R"(
+Event: time 1715672926.094343, type 3 (EV_ABS), code 57 (ABS_MT_TRACKING_ID), value 3311
+Event: time 1715672926.094343, type 3 (EV_ABS), code 53 (ABS_MT_POSITION_X), value 563
+Event: time 1715672926.094343, type 3 (EV_ABS), code 54 (ABS_MT_POSITION_Y), value 690
+Event: time 1715672926.094343, type 3 (EV_ABS), code 48 (ABS_MT_TOUCH_MAJOR), value 12
+Event: time 1715672926.094343, type 1 (EV_KEY), code 330 (BTN_TOUCH), value 1
+Event: time 1715672926.094343, -------------- SYN_REPORT ------------
+Event: time 1715672927.460751, type 3 (EV_ABS), code 48 (ABS_MT_TOUCH_MAJOR), value 16
+Event: time 1715672927.460751, -------------- SYN_REPORT ------------
+Event: time 1715672928.513793, type 3 (EV_ABS), code 47 (ABS_MT_SLOT), value 1
+Event: time 1715672928.513793, type 3 (EV_ABS), code 57 (ABS_MT_TRACKING_ID), value 3312
+Event: time 1715672928.513793, type 3 (EV_ABS), code 55 (ABS_MT_TOOL_TYPE), value 2
+Event: time 1715672928.513793, type 3 (EV_ABS), code 53 (ABS_MT_POSITION_X), value 1488
+Event: time 1715672928.513793, type 3 (EV_ABS), code 54 (ABS_MT_POSITION_Y), value 1465
+Event: time 1715672928.513793, type 3 (EV_ABS), code 48 (ABS_MT_TOUCH_MAJOR), value 21
+Event: time 1715672929.736110, -------------- SYN_REPORT ------------
+Event: time 1715672929.748269, type 3 (EV_ABS), code 57 (ABS_MT_TRACKING_ID), value -1
+Event: time 1715672929.748269, -------------- SYN_REPORT ------------
+Event: time 1715672929.970655, type 3 (EV_ABS), code 47 (ABS_MT_SLOT), value 0
+Event: time 1715672929.970655, type 3 (EV_ABS), code 53 (ABS_MT_POSITION_X), value 565
+Event: time 1715672929.970655, type 3 (EV_ABS), code 54 (ABS_MT_POSITION_Y), value 696
+Event: time 1715672929.970655, type 3 (EV_ABS), code 48 (ABS_MT_TOUCH_MAJOR), value 12
+Event: time 1715672932.423703, -------------- SYN_REPORT ------------
+Event: time 1715672945.970655, type 3 (EV_ABS), code 53 (ABS_MT_POSITION_X), value 565
+Event: time 1715672945.970655, type 3 (EV_ABS), code 54 (ABS_MT_POSITION_Y), value 696
+Event: time 1715672945.423703, -------------- SYN_REPORT ------------
+)")
+        << QList<TouchTestEvent>{
+               TouchTestEvent{TouchPointBuilder()
+                                  .id(3311)
+                                  .area({436.984, 521.395, 9.26471, 9.26471})
+                                  .normalPosition({0.272771, 0.243644})
+                                  .state(QEventPoint::State::Pressed)
+                                  .appendRawPosition({563, 690})
+                                  .pressure(1.0)
+                                  .build()},
+               TouchTestEvent::cancel(),
+               TouchTestEvent{TouchPointBuilder()
+                                  .id(3311)
+                                  .area({438.553, 525.969, 9.26471, 9.26471})
+                                  .normalPosition({0.272771, 0.243644})
+                                  .state(QEventPoint::State::Pressed)
+                                  .appendRawPosition({565, 696})
+                                  .pressure(1.0)
+                                  .build()},
+               TouchTestEvent{TouchPointBuilder()
+                                  .id(3311)
+                                  .area({438.553, 525.969, 9.26471, 9.26471})
+                                  .normalPosition({0.272771, 0.243644})
+                                  .state(QEventPoint::State::Updated)
+                                  .appendRawPosition({565, 696})
+                                  .pressure(1.0)
+                                  .build()},
+           };
 }
 
 void TouchTest::test()
 {
-    QFETCH(QList<input_event>, events);
-    QFETCH(QList<QList<QWindowSystemInterface::TouchPoint>>, points);
+    QFETCH(QList<input_event>, inputEvents);
+    QFETCH(QList<TouchTestEvent>, touchEvents);
 
-    QList<QList<QWindowSystemInterface::TouchPoint>> capturedPoints;
+    QList<TouchTestEvent> actualEvents;
     EpaperEvdevTouchScreenData data(QStringList{});
 
     // Copied from Ferrari
@@ -308,32 +490,48 @@ void TouchTest::test()
     data.m_rotate = QTransform(1, 0, 0, 0, 1, 0, 0, 0, 1);
     data.m_screenGeometry = QRect(0, 0, 1620, 2160);
 
-    connect(
-        &data,
-        &EpaperEvdevTouchScreenData::pointsChanged,
-        &data,
-        [&capturedPoints](const QList<QWindowSystemInterface::TouchPoint>& points) { capturedPoints.append(points); });
+    connect(&data,
+            &EpaperEvdevTouchScreenData::pointsChanged,
+            &data,
+            [&actualEvents](const QList<QWindowSystemInterface::TouchPoint>& points) {
+                actualEvents.append(TouchTestEvent(points));
+            });
+    connect(&data, &EpaperEvdevTouchScreenData::cancelTouch, &data, [&actualEvents]() {
+        actualEvents.append(TouchTestEvent::cancel());
+    });
 
-    for (const auto& event : events) {
+    for (const auto& event : inputEvents) {
         data.processInputEvent(&event);
     }
 
-    QCOMPARE(capturedPoints.size(), points.size());
+    QCOMPARE(actualEvents.size(), touchEvents.size());
 
-    for (int i = 0; i < points.size(); ++i) {
-        const auto& expected = points.at(i);
-        const auto& actual = capturedPoints.at(i);
+    for (int i = 0; i < touchEvents.size(); ++i) {
+        const auto& expected = touchEvents.at(i);
+        const auto& actual = actualEvents.at(i);
 
-        if (expected.size() != actual.size()) {
-            qWarning() << "unexpected point count at pos" << i;
-            qWarning() << " - expected" << expected;
-            qWarning() << " - actual" << actual;
+        if (expected.isTouch() != actual.isTouch()) {
+            qWarning() << "expected touch/cancel and got the opposite at pos" << i;
+            qWarning() << "- expected touch" << expected.isTouch();
+            qWarning() << "- actual touch" << actual.isTouch();
             QVERIFY(false);
         }
 
-        for (int j = 0; j < expected.size(); ++j) {
-            const auto& actualP = actual.at(j);
-            const auto& expectedP = expected.at(j);
+        if (expected.isCancel()) {
+            // No data to verify here.
+            continue;
+        }
+
+        if (expected.points().size() != actual.points().size()) {
+            qWarning() << "unexpected point count at pos" << i;
+            qWarning() << " - expected" << expected.points();
+            qWarning() << " - actual" << actual.points();
+            QVERIFY(false);
+        }
+
+        for (int j = 0; j < expected.points().size(); ++j) {
+            const auto& actualP = actual.points().at(j);
+            const auto& expectedP = expected.points().at(j);
             const auto& compare = pointsEqualOrError(expectedP, actualP);
             if (compare.has_value()) {
                 qWarning() << "error at pos" << i << " point " << j;

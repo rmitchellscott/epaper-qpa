@@ -58,6 +58,10 @@ EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &devi
         // nullptr means QGuiApplication will pick the target window.
         QWindowSystemInterface::handleTouchEvent(nullptr, touchDevice(), points);
     });
+    connect(d, &EpaperEvdevTouchScreenData::cancelTouch, this, [this]() {
+        // nullptr means QGuiApplication will pick the target window.
+        QWindowSystemInterface::handleTouchCancelEvent(nullptr, touchDevice());
+    });
 
     long absbits[NUM_LONGS(ABS_CNT)];
     if (ioctl(m_fd, EVIOCGBIT(EV_ABS, sizeof(absbits)), absbits) >= 0) {
