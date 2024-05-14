@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_LOGGING_CATEGORY(epaperLcEvdevTouch, "qt.qpa.input")
+Q_LOGGING_CATEGORY(epaperLcEvdevTouch, "rm.epaperevdevtouchscreenhandler", QtWarningMsg)
 
 #define LONG_BITS (sizeof(long) << 3)
 #define NUM_LONGS(bits) (((bits) + LONG_BITS - 1) / LONG_BITS)

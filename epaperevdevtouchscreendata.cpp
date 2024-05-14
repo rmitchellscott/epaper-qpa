@@ -6,14 +6,18 @@
 
 using namespace Qt::StringLiterals;
 
-Q_LOGGING_CATEGORY(epaperLcEvents, "qt.qpa.input.events")
+Q_LOGGING_CATEGORY(epaperLcTouchScreenData, "rm.epaperevdevtouchscreendata", QtWarningMsg)
+Q_LOGGING_CATEGORY(epaperLcTouchScreenDataEvents, "rm.epaperevdevtouchevents", QtWarningMsg)
 
-EpaperEvdevTouchScreenData::EpaperEvdevTouchScreenData(const QStringList &args)
-    : m_lastEventType(-1),
-      m_currentSlot(0),
-      hw_range_x_min(0), hw_range_x_max(0),
-      hw_range_y_min(0), hw_range_y_max(0),
-      hw_pressure_min(0), hw_pressure_max(0)
+EpaperEvdevTouchScreenData::EpaperEvdevTouchScreenData(const QStringList& args) :
+    m_lastEventType(-1),
+    m_currentSlot(0),
+    hw_range_x_min(0),
+    hw_range_x_max(0),
+    hw_range_y_min(0),
+    hw_range_y_max(0),
+    hw_pressure_min(0),
+    hw_pressure_max(0)
 {
     int rotationAngle = 0;
     bool invertx = false;
@@ -101,9 +105,13 @@ void EpaperEvdevTouchScreenData::processInputEvent(const input_event *data)
                 m_currentData.state = QEventPoint::State::Released;
             m_contacts[m_currentSlot].maj = m_currentData.maj;
         } else if (data->code == ABS_PRESSURE || data->code == ABS_MT_PRESSURE) {
-            if (Q_UNLIKELY(epaperLcEvents().isDebugEnabled()))
-                qCDebug(epaperLcEvents, "EV_ABS code 0x%x: pressure %d; bounding to [%d,%d]",
-                        data->code, data->value, hw_pressure_min, hw_pressure_max);
+            if (Q_UNLIKELY(epaperLcTouchScreenDataEvents().isDebugEnabled()))
+                qCDebug(epaperLcTouchScreenDataEvents,
+                        "EV_ABS code 0x%x: pressure %d; bounding to [%d,%d]",
+                        data->code,
+                        data->value,
+                        hw_pressure_min,
+                        hw_pressure_max);
             m_currentData.pressure = qBound(hw_pressure_min, data->value, hw_pressure_max);
             m_contacts[m_currentSlot].pressure = m_currentData.pressure;
         } else if (data->code == ABS_MT_SLOT) {
