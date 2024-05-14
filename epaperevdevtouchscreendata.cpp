@@ -250,6 +250,9 @@ void EpaperEvdevTouchScreenData::reportPoints()
             }
         }
     } else {
+        // Only report if something actually interesting happened...
+        bool shouldReport = !touchPoints.isEmpty() && (hasPressure || combinedStates != QEventPoint::State::Stationary);
+
         if (m_hasPalm) {
             m_hasPalm = false;
 
@@ -258,6 +261,7 @@ void EpaperEvdevTouchScreenData::reportPoints()
             if (m_touchActive) {
                 qCDebug(epaperLcTouchScreenData) << "reviving previously-killed-by-palm touch sequence";
                 for (auto& point : touchPoints) {
+                    shouldReport = true; // force a report
                     if (point.state == QEventPoint::Stationary || point.state == QEventPoint::Updated) {
                         point.state = QEventPoint::Pressed;
                     }
@@ -265,8 +269,7 @@ void EpaperEvdevTouchScreenData::reportPoints()
             }
         }
 
-        // Only report if something actually interesting happened...
-        if (!touchPoints.isEmpty() && (hasPressure || combinedStates != QEventPoint::State::Stationary)) {
+        if (shouldReport) {
             if (Q_UNLIKELY(epaperLcTouchScreenDataEvents().isDebugEnabled())) {
                 qCDebug(epaperLcTouchScreenDataEvents) << "reporting" << touchPoints.size();
                 for (const auto& tp : touchPoints) {
