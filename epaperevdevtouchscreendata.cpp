@@ -6,14 +6,18 @@
 
 using namespace Qt::StringLiterals;
 
-Q_LOGGING_CATEGORY(epaperLcEvents, "qt.qpa.input.events")
+Q_LOGGING_CATEGORY(epaperLcTouchScreenData, "rm.epaperevdevtouchscreendata", QtWarningMsg)
+Q_LOGGING_CATEGORY(epaperLcTouchScreenDataEvents, "rm.epaperevdevtouchevents", QtWarningMsg)
 
-EpaperEvdevTouchScreenData::EpaperEvdevTouchScreenData(const QStringList &args)
-    : m_lastEventType(-1),
-      m_currentSlot(0),
-      hw_range_x_min(0), hw_range_x_max(0),
-      hw_range_y_min(0), hw_range_y_max(0),
-      hw_pressure_min(0), hw_pressure_max(0)
+EpaperEvdevTouchScreenData::EpaperEvdevTouchScreenData(const QStringList& args) :
+    m_lastEventType(-1),
+    m_currentSlot(0),
+    hw_range_x_min(0),
+    hw_range_x_max(0),
+    hw_range_y_min(0),
+    hw_range_y_max(0),
+    hw_pressure_min(0),
+    hw_pressure_max(0)
 {
     int rotationAngle = 0;
     bool invertx = false;
@@ -76,15 +80,38 @@ void EpaperEvdevTouchScreenData::processInputEvent(const input_event *data)
                 m_contacts[m_currentSlot].state = QEventPoint::State::Pressed;
                 m_contacts[m_currentSlot].trackingId = m_currentData.trackingId;
             }
+        } else if (data->code == ABS_MT_TOOL_TYPE) {
+            Q_ASSERT(m_currentData.trackingId != -1);
+
+            switch (data->value) {
+            case MT_TOOL_FINGER:
+                m_currentData.type = Contact::Type::Finger;
+                break;
+            case MT_TOOL_PEN:
+                m_currentData.type = Contact::Type::Pen;
+                break;
+            case MT_TOOL_PALM:
+                m_currentData.type = Contact::Type::Palm;
+                break;
+            default:
+                m_currentData.type = Contact::Type::Unknown;
+                break;
+            }
+
+            m_contacts[m_currentSlot].type = m_currentData.type;
         } else if (data->code == ABS_MT_TOUCH_MAJOR) {
             m_currentData.maj = data->value;
             if (data->value == 0)
                 m_currentData.state = QEventPoint::State::Released;
             m_contacts[m_currentSlot].maj = m_currentData.maj;
         } else if (data->code == ABS_PRESSURE || data->code == ABS_MT_PRESSURE) {
-            if (Q_UNLIKELY(epaperLcEvents().isDebugEnabled()))
-                qCDebug(epaperLcEvents, "EV_ABS code 0x%x: pressure %d; bounding to [%d,%d]",
-                        data->code, data->value, hw_pressure_min, hw_pressure_max);
+            if (Q_UNLIKELY(epaperLcTouchScreenDataEvents().isDebugEnabled()))
+                qCDebug(epaperLcTouchScreenDataEvents,
+                        "EV_ABS code 0x%x: pressure %d; bounding to [%d,%d]",
+                        data->code,
+                        data->value,
+                        hw_pressure_min,
+                        hw_pressure_max);
             m_currentData.pressure = qBound(hw_pressure_min, data->value, hw_pressure_max);
             m_contacts[m_currentSlot].pressure = m_currentData.pressure;
         } else if (data->code == ABS_MT_SLOT) {
@@ -109,6 +136,13 @@ void EpaperEvdevTouchScreenData::processInputEvent(const input_event *data)
     m_lastEventType = data->type;
 }
 
+// TODO: I can't help but think this method could work better if we had a (chain of) transformers
+// that consume Contact and output Contact, and ultimately at the end of that chain, we map
+// to QWSI::TouchPoint. But there's some tricky details to get right there, like, how we properly
+// ensure all points get killed off, etc.
+//
+// Something for a later day, but I expect the need will come from e.g. filtering out noise that aren't
+// real events, etc.
 void EpaperEvdevTouchScreenData::reportPoints()
 {
     // If this breaks, the driver isn't reporting ABS_MT_TRACKING_ID correctly.
@@ -140,54 +174,37 @@ void EpaperEvdevTouchScreenData::reportPoints()
 
     QEventPoint::States combinedStates;
     bool hasPressure = false;
+    bool hasPalm = false;
 
-    for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; /*erasing*/) {
-        Contact &contact(it.value());
+    // TODO: it would be nice to consider how we can guard against some insanity here...
+    // an example might be getting a release for a not-yet-pressed point.
+    // stuff like this probably points to a kernel problem, but would be useful to
+    // guard userspace from them if we can.
+    for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; ++it) {
+        Contact& contact(it.value());
 
         if (!contact.state) {
-            ++it;
             continue;
         }
 
-        if (contact.pressure)
-            hasPressure = true;
+        if (contact.type == Contact::Type::Palm) {
+            hasPalm = true;
+        } else {
+            if (contact.pressure) {
+                hasPressure = true;
+            }
 
-        addTouchPoint(contact, &combinedStates);
-        ++it;
-    }
-
-    // Now look for contacts that have disappeared since the last sync.
-    for (auto it = m_lastContacts.begin(), end = m_lastContacts.end(); it != end; ++it) {
-        Contact &contact(it.value());
-        int key = it.key();
-        if (contact.trackingId != m_contacts[key].trackingId && contact.state) {
-            contact.state = QEventPoint::State::Released;
             addTouchPoint(contact, &combinedStates);
         }
-    }
 
-    // Remove contacts that have just been reported as released.
-    for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; /*erasing*/) {
-        Contact &contact(it.value());
-
-        if (!contact.state) {
-            ++it;
-            continue;
-        }
-
+        // Ensure the state is correctly reset if we just reported a release.
+        // If it wasn't released, reset it to stationary, so we can detect moves next time.
         if (contact.state == QEventPoint::State::Released) {
             contact.state = QEventPoint::State::Unknown;
+            contact.type = Contact::Type::Unknown;
         } else {
             contact.state = QEventPoint::State::Stationary;
         }
-        ++it;
-    }
-
-    m_lastContacts = m_contacts;
-
-    // Nothing of value to report...
-    if (touchPoints.isEmpty() || !(hasPressure || combinedStates != QEventPoint::State::Stationary)) {
-        return;
     }
 
     QRect winRect = m_screenGeometry;
@@ -199,10 +216,7 @@ void EpaperEvdevTouchScreenData::reportPoints()
 
     // Map the coordinates based on the normalized position. QPA expects 'area'
     // to be in screen coordinates.
-    const int pointCount = touchPoints.size();
-    for (int i = 0; i < pointCount; ++i) {
-        QWindowSystemInterface::TouchPoint &tp(touchPoints[i]);
-
+    for (auto& tp : touchPoints) {
         // Generate a screen position that is always inside the active window
         // or the primary screen.  Even though we report this as a QRectF, internally
         // Qt uses QRect/QPoint so we need to bound the size to winRect.size() - QSize(1, 1)
@@ -220,11 +234,51 @@ void EpaperEvdevTouchScreenData::reportPoints()
             tp.pressure = tp.state == QEventPoint::State::Released ? 0 : 1;
         else
             tp.pressure = (tp.pressure - hw_pressure_min) / qreal(hw_pressure_max - hw_pressure_min);
-
-        if (Q_UNLIKELY(epaperLcEvents().isDebugEnabled()))
-            qCDebug(epaperLcEvents) << "reporting" << tp;
     }
 
-    emit pointsChanged(touchPoints);
-}
+    // If there is at least one palm on the screen now, cancel the gesture.
+    // While the palm is down, we won't report any touch events at all.
+    // When the palm is eventually released, we'll start reporting again (in the else).
+    if (hasPalm) {
+        if (!m_hasPalm) {
+            m_hasPalm = true;
 
+            // Only cancel if there's an event stream active...
+            if (m_touchActive) {
+                qCDebug(epaperLcTouchScreenData) << "cancelling ongoing touch sequence due to palm";
+                emit cancelTouch();
+            }
+        }
+    } else {
+        // Only report if something actually interesting happened...
+        bool shouldReport = !touchPoints.isEmpty() && (hasPressure || combinedStates != QEventPoint::State::Stationary);
+
+        if (m_hasPalm) {
+            m_hasPalm = false;
+
+            // If a palm was blocking the gesture, then we need to re-report all points as pressed,
+            // as we sent a cancel that effectively throws out all touch state we had set before.
+            if (m_touchActive) {
+                qCDebug(epaperLcTouchScreenData) << "reviving previously-killed-by-palm touch sequence";
+                for (auto& point : touchPoints) {
+                    shouldReport = true; // force a report
+                    if (point.state == QEventPoint::Stationary || point.state == QEventPoint::Updated) {
+                        point.state = QEventPoint::Pressed;
+                    }
+                }
+            }
+        }
+
+        if (shouldReport) {
+            if (Q_UNLIKELY(epaperLcTouchScreenDataEvents().isDebugEnabled())) {
+                qCDebug(epaperLcTouchScreenDataEvents) << "reporting" << touchPoints.size();
+                for (const auto& tp : touchPoints) {
+                    qCDebug(epaperLcTouchScreenDataEvents) << "reporting" << tp;
+                }
+            }
+            emit pointsChanged(touchPoints);
+        }
+
+        m_touchActive = touchPoints.size() > 0;
+    }
+}

@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
-Q_LOGGING_CATEGORY(epaperLcEvdevTouch, "qt.qpa.input")
+Q_LOGGING_CATEGORY(epaperLcEvdevTouch, "rm.epaperevdevtouchscreenhandler", QtWarningMsg)
 
 #define LONG_BITS (sizeof(long) << 3)
 #define NUM_LONGS(bits) (((bits) + LONG_BITS - 1) / LONG_BITS)
@@ -57,6 +57,10 @@ EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &devi
     connect(d, &EpaperEvdevTouchScreenData::pointsChanged, this, [this](const QList<QWindowSystemInterface::TouchPoint>& points) {
         // nullptr means QGuiApplication will pick the target window.
         QWindowSystemInterface::handleTouchEvent(nullptr, touchDevice(), points);
+    });
+    connect(d, &EpaperEvdevTouchScreenData::cancelTouch, this, [this]() {
+        // nullptr means QGuiApplication will pick the target window.
+        QWindowSystemInterface::handleTouchCancelEvent(nullptr, touchDevice());
     });
 
     long absbits[NUM_LONGS(ABS_CNT)];

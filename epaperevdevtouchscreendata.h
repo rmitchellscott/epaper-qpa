@@ -14,6 +14,7 @@ public:
 
 signals:
     void pointsChanged(const QList<QWindowSystemInterface::TouchPoint>& points);
+    void cancelTouch();
 
 public:
     int m_lastEventType;
@@ -26,10 +27,19 @@ public:
         int maj = -1;
         int pressure = 0;
         QEventPoint::State state = QEventPoint::State::Pressed;
+
+        enum class Type {
+            Unknown,
+            Finger,
+            Pen,
+            Palm,
+        };
+        Type type = Type::Unknown;
     };
 
-    QHash<int, Contact> m_contacts; // The key is a tracking id for type A, slot number for type B.
-    QHash<int, Contact> m_lastContacts;
+    bool m_hasPalm = false;
+    bool m_touchActive = false;
+    QHash<int, Contact> m_contacts; // The key is a slot number for type B. Type A is unsupported.
     Contact m_currentData;
     int m_currentSlot;
 
