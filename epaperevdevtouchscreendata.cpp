@@ -145,11 +145,16 @@ void EpaperEvdevTouchScreenData::processInputEvent(const input_event *data)
 // real events, etc.
 void EpaperEvdevTouchScreenData::reportPoints()
 {
+    const QRect winRect = m_screenGeometry;
+
     // If this breaks, the driver isn't reporting ABS_MT_TRACKING_ID correctly.
     Q_ASSERT(m_contacts.isEmpty() || m_contacts.constBegin().value().trackingId != -1);
 
+    // If this breaks, somehow, the screen size hasn't been set, or wasn't read correctly.
+    Q_ASSERT(!winRect.isNull());
+
     QList<QWindowSystemInterface::TouchPoint> touchPoints;
-    const auto& addTouchPoint = [this, &touchPoints](const Contact &contact, QEventPoint::States *combinedStates) {
+    const auto& addTouchPoint = [this, &touchPoints](const Contact& contact, QEventPoint::States* combinedStates) {
         QWindowSystemInterface::TouchPoint tp;
         tp.id = contact.trackingId;
         tp.state = contact.state;
@@ -206,10 +211,6 @@ void EpaperEvdevTouchScreenData::reportPoints()
             contact.state = QEventPoint::State::Stationary;
         }
     }
-
-    QRect winRect = m_screenGeometry;
-    if (winRect.isNull())
-        return;
 
     const int hw_w = hw_range_x_max - hw_range_x_min;
     const int hw_h = hw_range_y_max - hw_range_y_min;
