@@ -3,8 +3,12 @@
 #include <QString>
 #include <QLoggingCategory>
 #include <QGuiApplication>
+#include <QPainter>
 
 using namespace Qt::StringLiterals;
+
+// Set to e.g. EPTOUCH_DEBUG=/tmp/touch-debug.png to get a dump of all touch events
+const QString touchDebugFile = qEnvironmentVariable("EPTOUCH_DEBUG");
 
 Q_LOGGING_CATEGORY(epaperLcTouchScreenData, "rm.epaperevdevtouchscreendata", QtWarningMsg)
 Q_LOGGING_CATEGORY(epaperLcTouchScreenDataEvents, "rm.epaperevdevtouchevents", QtWarningMsg)
@@ -56,12 +60,18 @@ EpaperEvdevTouchScreenData::EpaperEvdevTouchScreenData(const QStringList& args) 
     if (inverty) {
         m_rotate *= QTransform::fromTranslate(0.5, 0.5).scale(1.0, -1.0).translate(-0.5, -0.5);
     }
+
+    m_debugOverlaySaveTimer.setSingleShot(true);
+    connect(&m_debugOverlaySaveTimer, &QTimer::timeout, this, [this]() {
+        if (!m_debugOverlay.save(touchDebugFile)) {
+            qCWarning(epaperLcTouchScreenData, "failed to write EPTOUCH_DEBUG");
+        }
+    });
 }
 
-void EpaperEvdevTouchScreenData::processInputEvent(const input_event *data)
+void EpaperEvdevTouchScreenData::processInputEvent(const input_event* data)
 {
     if (data->type == EV_ABS) {
-
         if (data->code == ABS_MT_POSITION_X) {
             m_currentData.x = qBound(hw_range_x_min, data->value, hw_range_x_max);
             m_contacts[m_currentSlot].x = m_currentData.x;
@@ -201,6 +211,29 @@ void EpaperEvdevTouchScreenData::reportPoints()
     QEventPoint::States combinedStates;
     bool hasPressure = false;
     bool hasPalm = false;
+    const bool touchDebug = !touchDebugFile.isEmpty();
+    std::unique_ptr<QPainter> painter;
+
+    if (touchDebug) {
+        const QMargins debugOverlayMargins(100, 100, 100, 100);
+        const auto& debugOverlaySize = winRect.size()
+            + QSize(debugOverlayMargins.top() + debugOverlayMargins.bottom(),
+                    debugOverlayMargins.left() + debugOverlayMargins.right());
+        bool didResize = false;
+        if (m_debugOverlay.size() != debugOverlaySize) {
+            m_debugOverlay = QImage(debugOverlaySize, QImage::Format_ARGB32_Premultiplied);
+            m_debugOverlay.fill(Qt::white);
+            didResize = true;
+        }
+        painter = std::make_unique<QPainter>(&m_debugOverlay);
+        const QRect debugClipRect(QPoint(debugOverlayMargins.left(), debugOverlayMargins.top()), winRect.size());
+        painter->setClipRect(debugClipRect);
+        painter->translate(debugClipRect.topLeft());
+
+        if (didResize) {
+            painter->drawRect(QRect(QPoint(0, 0), winRect.size()).adjusted(0, 0, -1, -1));
+        }
+    }
 
     // TODO: it would be nice to consider how we can guard against some insanity here...
     // an example might be getting a release for a not-yet-pressed point.
@@ -213,6 +246,42 @@ void EpaperEvdevTouchScreenData::reportPoints()
 
         if (!contact.state) {
             continue;
+        }
+
+        if (touchDebug) {
+            // I don't really care about the case of multiple screens here. If it's ever an issue this needs fixing.
+            Q_ASSERT(winRect.topLeft() == QPoint(0, 0));
+
+            static int colorIndex = 0;
+
+            std::array<const char*, 10> colors{
+                "#1f77b4",
+                "#ff7f0e",
+                "#2ca02c",
+                "#d62728",
+                "#9467bd",
+                "#8c564b",
+                "#e377c2",
+                "#7f7f7f",
+                "#bcbd22",
+                "#17becf",
+            };
+
+            // This is technically not perfect, as we lose the color on each subsequent press,
+            // but it avoids having to store colors separately or something.
+            if (tp.state == QEventPoint::Pressed) {
+                colorIndex++;
+                if (colorIndex >= colors.size()) {
+                    colorIndex = 0;
+                }
+            }
+
+            painter->fillRect(tp.area, QColor(colors[colorIndex]));
+            if (tp.state == QEventPoint::Pressed) {
+                painter->drawText(tp.area.bottomRight(), QString::fromLatin1("TD: %1").arg(tp.id));
+            } else if (tp.state == QEventPoint::Released) {
+                painter->drawText(tp.area.bottomRight(), QString::fromLatin1("TU: %1").arg(tp.id));
+            }
         }
 
         if (contact.type == Contact::Type::Palm) {
@@ -233,6 +302,11 @@ void EpaperEvdevTouchScreenData::reportPoints()
         } else {
             contact.state = QEventPoint::State::Stationary;
         }
+    }
+
+    if (touchDebug) {
+        // We throttle the save so it doesn't happen too often...
+        m_debugOverlaySaveTimer.start(500);
     }
 
     // If there is at least one palm on the screen now, cancel the gesture.
