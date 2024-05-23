@@ -153,12 +153,10 @@ void EpaperEvdevTouchScreenData::reportPoints()
     // If this breaks, somehow, the screen size hasn't been set, or wasn't read correctly.
     Q_ASSERT(!winRect.isNull());
 
-    QList<QWindowSystemInterface::TouchPoint> touchPoints;
-    const auto& addTouchPoint = [this, &touchPoints](const Contact& contact, QEventPoint::States* combinedStates) {
+    const auto& makeTouchPoint = [this, &winRect](const Contact& contact) -> QWindowSystemInterface::TouchPoint {
         QWindowSystemInterface::TouchPoint tp;
         tp.id = contact.trackingId;
         tp.state = contact.state;
-        *combinedStates |= tp.state;
 
         // Store the HW coordinates for now, will be updated later.
         tp.area = QRectF(0, 0, contact.maj, contact.maj);
@@ -174,7 +172,30 @@ void EpaperEvdevTouchScreenData::reportPoints()
 
         tp.rawPositions.append(QPointF(contact.x, contact.y));
 
-        touchPoints.append(tp);
+        // Map the coordinates based on the normalized position. QPA expects
+        // 'area' to be in screen coordinates. Generate a screen position that
+        // is always inside the active window or the primary screen.  Even
+        // though we report this as a QRectF, internally Qt uses QRect/QPoint so
+        // we need to bound the size to winRect.size() - QSize(1, 1)
+        const int hw_w = hw_range_x_max - hw_range_x_min;
+        const int hw_h = hw_range_y_max - hw_range_y_min;
+        const qreal wx = winRect.left() + tp.normalPosition.x() * (winRect.width() - 1);
+        const qreal wy = winRect.top() + tp.normalPosition.y() * (winRect.height() - 1);
+        const qreal sizeRatio = (winRect.width() + winRect.height()) / qreal(hw_w + hw_h);
+        if (tp.area.width() == -1) // touch major was not provided
+            tp.area = QRectF(0, 0, 8, 8);
+        else
+            tp.area = QRectF(0, 0, tp.area.width() * sizeRatio, tp.area.height() * sizeRatio);
+        tp.area.moveCenter(QPointF(wx, wy));
+
+        // Calculate normalized pressure.
+        if (!hw_pressure_min && !hw_pressure_max) {
+            tp.pressure = tp.state == QEventPoint::State::Released ? 0 : 1;
+        } else {
+            tp.pressure = (tp.pressure - hw_pressure_min) / qreal(hw_pressure_max - hw_pressure_min);
+        }
+
+        return tp;
     };
 
     QEventPoint::States combinedStates;
@@ -185,8 +206,10 @@ void EpaperEvdevTouchScreenData::reportPoints()
     // an example might be getting a release for a not-yet-pressed point.
     // stuff like this probably points to a kernel problem, but would be useful to
     // guard userspace from them if we can.
+    QList<QWindowSystemInterface::TouchPoint> touchPoints;
     for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; ++it) {
         Contact& contact(it.value());
+        const auto& tp = makeTouchPoint(contact);
 
         if (!contact.state) {
             continue;
@@ -198,8 +221,8 @@ void EpaperEvdevTouchScreenData::reportPoints()
             if (contact.pressure) {
                 hasPressure = true;
             }
-
-            addTouchPoint(contact, &combinedStates);
+            combinedStates |= tp.state;
+            touchPoints.append(tp);
         }
 
         // Ensure the state is correctly reset if we just reported a release.
@@ -210,31 +233,6 @@ void EpaperEvdevTouchScreenData::reportPoints()
         } else {
             contact.state = QEventPoint::State::Stationary;
         }
-    }
-
-    const int hw_w = hw_range_x_max - hw_range_x_min;
-    const int hw_h = hw_range_y_max - hw_range_y_min;
-
-    // Map the coordinates based on the normalized position. QPA expects 'area'
-    // to be in screen coordinates.
-    for (auto& tp : touchPoints) {
-        // Generate a screen position that is always inside the active window
-        // or the primary screen.  Even though we report this as a QRectF, internally
-        // Qt uses QRect/QPoint so we need to bound the size to winRect.size() - QSize(1, 1)
-        const qreal wx = winRect.left() + tp.normalPosition.x() * (winRect.width() - 1);
-        const qreal wy = winRect.top() + tp.normalPosition.y() * (winRect.height() - 1);
-        const qreal sizeRatio = (winRect.width() + winRect.height()) / qreal(hw_w + hw_h);
-        if (tp.area.width() == -1) // touch major was not provided
-            tp.area = QRectF(0, 0, 8, 8);
-        else
-            tp.area = QRectF(0, 0, tp.area.width() * sizeRatio, tp.area.height() * sizeRatio);
-        tp.area.moveCenter(QPointF(wx, wy));
-
-        // Calculate normalized pressure.
-        if (!hw_pressure_min && !hw_pressure_max)
-            tp.pressure = tp.state == QEventPoint::State::Released ? 0 : 1;
-        else
-            tp.pressure = (tp.pressure - hw_pressure_min) / qreal(hw_pressure_max - hw_pressure_min);
     }
 
     // If there is at least one palm on the screen now, cancel the gesture.
