@@ -1,5 +1,7 @@
 #pragma once
 #include <QObject>
+#include <QTimer>
+#include <QImage>
 #include <qpa/qwindowsysteminterface.h>
 
 #include <linux/input.h>
@@ -55,4 +57,6 @@ public:
     int hw_pressure_max;
     QTransform m_rotate;
     QRect m_screenGeometry;
+    QImage m_debugOverlay;
+    QTimer m_debugOverlaySaveTimer;
 };
