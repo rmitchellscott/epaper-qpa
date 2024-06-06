@@ -89,6 +89,26 @@ void EpaperEvdevTouchScreenData::processInputEvent(const input_event* data)
             } else {
                 m_contacts[m_currentSlot].state = QEventPoint::State::Pressed;
                 m_contacts[m_currentSlot].trackingId = m_currentData.trackingId;
+
+                static int colorIndex = 0;
+                std::array<const char*, 10> colors{
+                    "#1f77b4",
+                    "#ff7f0e",
+                    "#2ca02c",
+                    "#d62728",
+                    "#9467bd",
+                    "#8c564b",
+                    "#e377c2",
+                    "#7f7f7f",
+                    "#bcbd22",
+                    "#17becf",
+                };
+
+                colorIndex++;
+                if (colorIndex >= colors.size()) {
+                    colorIndex = 0;
+                }
+                m_contacts[m_currentSlot].debugPointColor = colors[colorIndex];
             }
         } else if (data->code == ABS_MT_TOOL_TYPE) {
             Q_ASSERT(m_currentData.trackingId != -1);
@@ -251,32 +271,7 @@ void EpaperEvdevTouchScreenData::reportPoints()
         if (touchDebug) {
             // I don't really care about the case of multiple screens here. If it's ever an issue this needs fixing.
             Q_ASSERT(winRect.topLeft() == QPoint(0, 0));
-
-            static int colorIndex = 0;
-
-            std::array<const char*, 10> colors{
-                "#1f77b4",
-                "#ff7f0e",
-                "#2ca02c",
-                "#d62728",
-                "#9467bd",
-                "#8c564b",
-                "#e377c2",
-                "#7f7f7f",
-                "#bcbd22",
-                "#17becf",
-            };
-
-            // This is technically not perfect, as we lose the color on each subsequent press,
-            // but it avoids having to store colors separately or something.
-            if (tp.state == QEventPoint::Pressed) {
-                colorIndex++;
-                if (colorIndex >= colors.size()) {
-                    colorIndex = 0;
-                }
-            }
-
-            painter->fillRect(tp.area, QColor(colors[colorIndex]));
+            painter->fillRect(tp.area, QColor(contact.debugPointColor));
             if (tp.state == QEventPoint::Pressed) {
                 painter->drawText(tp.area.bottomRight(), QString::fromLatin1("TD: %1").arg(tp.id));
             } else if (tp.state == QEventPoint::Released) {

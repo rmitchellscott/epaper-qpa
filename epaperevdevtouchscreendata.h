@@ -1,6 +1,7 @@
 #pragma once
 #include <QObject>
 #include <QTimer>
+#include <QHash>
 #include <QImage>
 #include <qpa/qwindowsysteminterface.h>
 
@@ -30,13 +31,15 @@ public:
         int pressure = 0;
         QEventPoint::State state = QEventPoint::State::Pressed;
 
-        enum class Type {
+        enum class Type
+        {
             Unknown,
             Finger,
             Pen,
             Palm,
         };
         Type type = Type::Unknown;
+        const char* debugPointColor = nullptr;
     };
 
     bool m_hasPalm = false;
