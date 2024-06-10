@@ -149,9 +149,9 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_0, 0x0040, Qt::Key_0 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
 
     // KEY_MINUS (12)
-    // "(" Left Parenthesis 0x0028
+    // ")" Right Parenthesis 0x0029
     // "º" Masculine Ordinal Indicator 0x00ba
-    { KEY_MINUS, 0x0028, Qt::Key_ParenLeft, Modifiers::ModPlain, 0x00, 0x0000 },
+    { KEY_MINUS, 0x0029, Qt::Key_ParenRight, Modifiers::ModPlain, 0x00, 0x0000 },
     { KEY_MINUS, 0x00ba, Qt::Key_masculine, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_EQUAL (13)
