@@ -138,12 +138,11 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_0, 0x002b, Qt::Key_Plus, Modifiers::ModShift | Modifiers::ModAlt, 0x00, 0x0000 },
     { KEY_0, 0x002b, Qt::Key_Plus, Modifiers::ModShift | Modifiers::ModAltGr, 0x00, 0x0000 },
 
-    // Keycode 12 non-existent on Seabird.
-    { 12, 0x002D, 0x0000002D, 0x00, 0x00, 0x0000 },
-    { 12, 0x005F, 0x0000005F, 0x01, 0x00, 0x0000 },
-    { 12, 0x005C, 0x0000005C, 0x02, 0x00, 0x0000 },
-    { 12, 0x005F, 0x0400005F, 0x04, 0x00, 0x0000 },
-    { 12, 0x005F, 0x0400005F, 0x05, 0x00, 0x0000 },
+    // KEY_MINUS (12)
+    // "-" Hyphen-Minus 0x002d
+    // "_" Low Line 0x005f
+    { KEY_MINUS, 0x002d, Qt::Key_Minus, 0x00, 0x00, 0x0000 },
+    { KEY_MINUS, 0x005f, Qt::Key_Underscore, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_EQUAL (13)
     // "=" Equals Sign 0x003d
