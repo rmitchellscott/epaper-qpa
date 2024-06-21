@@ -424,25 +424,41 @@ EpaperEvdevKeyboardHandler::KeycodeAction EpaperEvdevKeyboardHandler::processKey
     for (int i = 0; i < m_keymap_size && !(map_plain && map_withmod); ++i) {
         const EpaperEvdevKeyboardMap::Mapping *m = m_keymap + i;
         if (m->keycode == keycode) {
-            if (m->modifiers == 0) {
-                map_plain = *m;
+            if (m->flags & EpaperEvdevKeyboardMap::IsCapsLockException)
+            {
+                bool isShift = (modifiers & EpaperEvdevKeyboardMap::Modifiers::ModShift) != 0;
+                bool isCapsLock = m_locks[0] != 0;
 
-                if (m_locks[0] /*CapsLock*/ && m->flags & EpaperEvdevKeyboardMap::IsCapsLockException) {
-                    // If caps lock is pressed, no modifiers (shift, alt, etc.) are present and the character is flagged as caps lock exception;
-                    // print the character mapped under m_capsLockException and skip the other checks.
-                    // E.g.: KEY_0 on French locale: Plain: "à", shift: "0", alt/altgr: "@", caps lock: "À".
-                    // Note how caps lock prints a character different than plain and shift, which is an "IsCapsLockException" case.
-                    auto const exceptionFound = std::find_if(
-                        m_capsLockException.begin(),
-                        m_capsLockException.end(),
-                        [m](auto const &exception) {
-                            return m->unicode == exception.first;
-                        });
-                    if (exceptionFound != m_capsLockException.end()) {
-                        map_plain->unicode = exceptionFound->second;
+                auto const exceptionFound = std::find_if(
+                    m_capsLockException.begin(),
+                    m_capsLockException.end(),
+                    [m](auto const &exception) {
+                        return m->keycode == exception.keycode;
+                    });
+                if (exceptionFound != m_capsLockException.end()) {
+                    auto populateCode = [&m](std::optional<EpaperEvdevKeyboardMap::Mapping> &map, EpaperEvdevKeyboardMap::CapsLockException::Code const& code) {
+                        map = *m;
+                        map->unicode = code.unicode;
+                        map->qtcode = code.qt;
+                        map->flags |= code.isDead ? EpaperEvdevKeyboardMap::Flags::IsDead : 0x00;
+                    };
+
+                    if (isShift && isCapsLock) {
+                        populateCode(map_withmod, exceptionFound->shiftCapsLock);
+                    } else if (isShift && !isCapsLock) {
+                        populateCode(map_withmod, exceptionFound->shift);
+                    } else if (!isShift && isCapsLock) {
+                        populateCode(map_plain, exceptionFound->capsLock);
+                    } else /* no shift, no caps */ {
+                        populateCode(map_plain, exceptionFound->plain);
                     }
                 }
             }
+            else if (m->modifiers == 0)
+            {
+                map_plain = *m;
+            }
+
             auto testmods = m_modifiers;
             if (m_locks[0] /*CapsLock*/ && (m->flags & EpaperEvdevKeyboardMap::IsLetter))
                 testmods ^= EpaperEvdevKeyboardMap::ModShift;

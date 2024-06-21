@@ -77,11 +77,11 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_1, 0x0031, Qt::Key_1 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
 
     // KEY_2 (3)
+    // Additional mapping under capsLockException
     // "é" Latin Small Letter E with Acute 0x00e9
     // "2" Digit Two 0x0032
     // "̃ " Combining Tilde 0x0303
     { KEY_2, 0x00e9, Qt::Key_Eacute, 0x00, Flags::IsCapsLockException, 0x0000 },
-    { KEY_2, 0x0032, Qt::Key_2, Modifiers::ModShift, 0x00, 0x0000 },
     { KEY_2, 0x0303, Qt::Key_Dead_Tilde, Modifiers::ModAlt, Flags::IsDead, 0x0000 },
     { KEY_2, 0x0303, Qt::Key_Dead_Tilde, Modifiers::ModAltGr, Flags::IsDead, 0x0000 },
     { KEY_2, 0x0032, Qt::Key_2 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
@@ -118,10 +118,10 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_6, 0x0036, Qt::Key_6 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
 
     // KEY_7 (8)
+    // Additional mapping under capsLockException
     // "è" Latin Small Letter E with Grave 0x00e8
     // "7" Digit Seven 0x0037
     { KEY_7, 0x00e8, Qt::Key_Egrave, 0x00, Flags::IsCapsLockException, 0x0000 },
-    { KEY_7, 0x0037, Qt::Key_7, Modifiers::ModShift, 0x00, 0x0000 },
     { KEY_7, 0x0037, Qt::Key_7 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
 
     // KEY_8 (9)
@@ -132,18 +132,18 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_8, 0x0038, Qt::Key_8 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
 
     // KEY_9 (10)
+    // Additional mapping under capsLockException
     // "ç" Latin Small Letter C with Cedilla 0x00e7
     // "9" Digit Nine 0x0039
     { KEY_9, 0x00e7, Qt::Key_Ccedilla, 0x00, Flags::IsCapsLockException, 0x0000 },
-    { KEY_9, 0x0039, Qt::Key_9, Modifiers::ModShift, 0x00, 0x0000 },
     { KEY_9, 0x0039, Qt::Key_9 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
 
     // KEY_0 (11)
+    // Additional mapping under capsLockException
     // "à" Latin Small Letter a with Grave 0x00e0
     // "0" Digit Zero 0x0030
     // "@" Commercial At 0x0040
     { KEY_0, 0x00e0, Qt::Key_Agrave, 0x00, Flags::IsCapsLockException, 0x0000 },
-    { KEY_0, 0x0030, Qt::Key_0, Modifiers::ModShift, 0x00, 0x0000 },
     { KEY_0, 0x0040, Qt::Key_At, Modifiers::ModAlt, 0x00, 0x0000 },
     { KEY_0, 0x0040, Qt::Key_At, Modifiers::ModAltGr, 0x00, 0x0000 },
     { KEY_0, 0x0040, Qt::Key_0 | 0x04000000, Modifiers::ModControl, 0x00, 0x0000 },
@@ -279,10 +279,10 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
 
     // FIXME(modifiers)
     // KEY_APOSTROPHE (40)
+    // Additional mapping under capsLockException
     // "ù" Latin Small Letter U with Grave 0x00f9
     // "%" Percent Sign 0x0025
     { KEY_APOSTROPHE, 0x00f9, Qt::Key_Ugrave, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
-    { KEY_APOSTROPHE, 0x0025, Qt::Key_Percent, Modifiers::ModShift, Flags::IsDead, 0x0000 },
 
     // KEY_GRAVE (41)
     // "`" Combining Grave Accent 0x0300 (Dead Key)
@@ -511,31 +511,61 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
 
 constexpr static size_t keymapSize = sizeof(keymap) / sizeof(keymap[0]);
 
-#include <tuple>
-
-// This struct exists only for French as of now; letters à, ç, è, é and ù
-// are only printed in uppercase when caps lock is on (but not with shift).
-// Merci français, for being so special!
-static constexpr std::pair<quint16, quint16> capsLockException[] = {
+static constexpr EpaperEvdevKeyboardMap::CapsLockException capsLockException[] = {
+    // KEY_2 (3)
     // "é" Latin Small Letter E with Acute 0x00e9
     // "É" Latin Capital Letter E with Acute 0x00c9
-    {0x00e9, 0x00c9},
+    // "2" Digit Two 0x0032
+    { KEY_2,
+      { 0x00e9, Qt::Key_Eacute, false },
+      { 0x00c9, Qt::Key_Eacute, false },
+      { 0x0032, Qt::Key_2, false },
+      { 0x0032, Qt::Key_2, false },
+    },
 
+    // KEY_7 (8)
     // "è" Latin Small Letter E with Grave 0x00e8
     // "È" Latin Capital Letter E with Grave 0x00c8
-    {0x00e8, 0x00c8},
+    // "7" Digit Seven 0x0037
+    { KEY_7,
+      { 0x00e8, Qt::Key_Egrave, false },
+      { 0x00c8, Qt::Key_Egrave, false },
+      { 0x0037, Qt::Key_7, false },
+      { 0x0037, Qt::Key_7, false },
+    },
 
+    // KEY_9 (10)
     // "ç" Latin Small Letter C with Cedilla 0x00e7
     // "Ç" Latin Capital Letter C with Cedilla 0x00c7
-    {0x00e7, 0x00c7},
+    // "9" Digit Nine 0x0039
+    { KEY_9,
+      { 0x00e7, Qt::Key_Ccedilla, false },
+      { 0x00c7, Qt::Key_Ccedilla, false },
+      { 0x0039, Qt::Key_9, false },
+      { 0x0039, Qt::Key_9, false },
+    },
 
+    // KEY_0 (11)
     // "à" Latin Small Letter a with Grave 0x00e0
     // "À" Latin Capital Letter a with Grave 0x00c0
-    {0x00e0, 0x00c0},
+    // "0" Digit Zero 0x0030
+    { KEY_0,
+      { 0x00e0, Qt::Key_Agrave, false },
+      { 0x00c0, Qt::Key_Agrave, false },
+      { 0x0030, Qt::Key_0, false }, 
+      { 0x0030, Qt::Key_0, false },
+    },
 
+    // KEY_APOSTROPHE (40)
     // "ù" Latin Small Letter U with Grave 0x00f9
     // "Ù" Latin Capital Letter U with Grave 0x00d9
-    {0x00f9, 0x00d9},
+    // "%" Percent Sign 0x0025
+    { KEY_APOSTROPHE,
+      { 0x00f9, Qt::Key_Ugrave, false },
+      { 0x00d9, Qt::Key_Ugrave, false },
+      { 0x0025, Qt::Key_Percent, false },
+      { 0x0025, Qt::Key_Percent, false },
+    },
 };
 
 };

@@ -149,6 +149,23 @@ enum Modifiers {
     ModCtrlR = 0x80,
     ModMeta = 0x100,
 };
+
+// This struct is relevant for French and Italian, due to having keys for which caps lock and shift aren't interchangable.
+struct CapsLockException
+{
+    struct Code
+    {
+        quint16 unicode;
+        quint32 qt;
+        bool isDead;
+    };
+
+    quint16 keycode;
+    Code plain;
+    Code capsLock;
+    Code shift;
+    Code shiftCapsLock;
+};
 }
 
 class EpaperEvdevFdContainer
@@ -262,7 +279,7 @@ private:
     EpaperEvdevKeyboardMap::Mapping *m_keymap;
     int m_keymap_size;
 
-    std::vector<std::pair<quint16, quint16>> m_capsLockException;
+    std::vector<EpaperEvdevKeyboardMap::CapsLockException> m_capsLockException;
     QFileSystemWatcher m_watcher;
     QString m_firmwareLang;
     EpaperEvdevInputLocale m_prevLocale;
