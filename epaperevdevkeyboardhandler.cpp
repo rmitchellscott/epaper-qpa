@@ -253,6 +253,46 @@ void EpaperEvdevKeyboardHandler::switchLed(int led, bool state)
 }
 
 namespace {
+
+    enum class LidState {
+        Open,
+        Closed,
+    };
+
+    /**
+     * Read sysfs node to determine lid state
+     *
+     * Returns the lid closed state in an optional if we were able to read it.
+     */
+    std::optional<LidState> readLidState() {
+        auto device = "/dev/input/by-path/platform-gpio-hall-sensors-event";
+        EpaperEvdevFdContainer fd(qt_safe_open(device, O_RDONLY | O_NDELAY, 0));
+        if (fd.get() >= 0) {
+            unsigned char state[SW_MAX / sizeof(unsigned char) + 1];
+            memset(state, 0, sizeof(state));
+
+            int ret = ioctl(fd.get(), EVIOCGSW(sizeof(state)), state);
+            if (ret < 0) {
+                qCDebug(EpaperEvdevKeyboardMapLog, "unable to query lid state: %d", ret);
+                return std::nullopt;
+            }
+
+            uint64_t sw = *(uint64_t *) state;
+            bool lidClosed = sw & (0x1U << (SW_LID));
+            if (lidClosed) {
+                qCDebug(EpaperEvdevKeyboardMapLog, "queried lid state Closed");
+                return LidState::Closed;
+            } else {
+                qCDebug(EpaperEvdevKeyboardMapLog, "queried lid state Open");
+                return LidState::Open;
+            }
+        }
+        else {
+            qCDebug(EpaperEvdevKeyboardMapLog) << "unable to open lid path" << device;
+        }
+        return std::nullopt;
+    }
+
     /**
      * Will inspect hall sensor event for folio SW_LID events.
      *
@@ -288,7 +328,13 @@ namespace {
             return;
         }
         qCDebug(EpaperEvdevKeyboardMapLog, "Got pen event: %3d", event.value);
-        // only dispatch wakeup when pen is detached
+        // only dispatch wakeup when folio is open
+        auto lidState = readLidState();
+        if (lidState.has_value() && lidState.value() == LidState::Closed) {
+            return;
+        }
+
+        // .. and pen is detached
         if (event.value == 0) {
             if (!QWindowSystemInterface::handleKeyEvent(nullptr, QEvent::KeyPress,
                                                         Qt::Key_Open,
