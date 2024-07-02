@@ -136,10 +136,9 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_MINUS, 0x003f, Qt::Key_Question, Modifiers::ModShift, 0x00, 0x0000 },
 
     // KEY_EQUAL (13)
+    // Additional mapping under capsLockException
     // "ì" Latin Small Letter I with Grave 0x00ec
-    // "^" Combining Circumflex Accent 0x0302 (Dead Key)
     { KEY_EQUAL, 0x00ec, Qt::Key_Igrave, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
-    { KEY_EQUAL, 0x0302, Qt::Key_Dead_Circumflex, Modifiers::ModShift, Flags::IsDead, 0x0000 },
 
     // KEY_BACKSPACE (14)
     { KEY_BACKSPACE, 0xffff, Qt::Key_Backspace, 0x00, 0x00, 0x0000 },
@@ -192,10 +191,9 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_P, 0x0050, 0x00000050, 0x01, 0x02, 0x0000 },
 
     // KEY_LEFTBRACE (26)
+    // Additional mapping under capsLockException
     // "é" Latin Small Letter E with Acute 0x00e9
-    // "è" Latin Small Letter E with Grave 0x00e8
     { KEY_LEFTBRACE, 0x00e9, Qt::Key_Eacute, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
-    { KEY_LEFTBRACE, 0x00e8, Qt::Key_Egrave, Modifiers::ModShift, Flags::IsCapsLockException, 0x0000 },
 
     // KEY_RIGHTBRACE (27)
     // "+" Plus Sign 0x002b
@@ -247,28 +245,25 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
     { KEY_L, 0x004c, 0x0000004c, 0x01, 0x02, 0x0000 },
 
     // KEY_SEMICOLON (39)
+    // Additional mapping under capsLockException
     // "ò" Latin Small Letter O with Grave 0x00f2
-    // "ç" Latin Small Letter C with Cedilla 0x00e7
     // "@" Commercial At 0x0040
     { KEY_SEMICOLON, 0x00f2, Qt::Key_Ograve, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
-    { KEY_SEMICOLON, 0x00e7, Qt::Key_Ccedilla, Modifiers::ModShift, Flags::IsCapsLockException, 0x0000 },
     { KEY_SEMICOLON, 0x0040, Qt::Key_At, Modifiers::ModAlt, 0x00, 0x0000 },
     { KEY_SEMICOLON, 0x0040, Qt::Key_At, Modifiers::ModAltGr, 0x00, 0x0000 },
 
     // KEY_APOSTROPHE (40)
+    // Additional mapping under capsLockException
     // "à" Latin Small Letter a with Grave 0x00e0
-    // "º" Masculine Ordinal Indicator 0x00ba
     // "#" Number Sign 0x0023
     { KEY_APOSTROPHE, 0x00e0, Qt::Key_Agrave, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
-    { KEY_APOSTROPHE, 0x00ba, Qt::Key_masculine, Modifiers::ModShift, 0x00, 0x0000 },
     { KEY_APOSTROPHE, 0x0023, Qt::Key_NumberSign, Modifiers::ModAlt, 0x00, 0x0000 },
     { KEY_APOSTROPHE, 0x0023, Qt::Key_NumberSign, Modifiers::ModAltGr, 0x00, 0x0000 },
 
     // KEY_GRAVE (41)
+    // Additional mapping under capsLockException
     // "ù" Latin Small Letter U with Grave 0x00f9
-    // "§" Section Sign 0x00a7
     { KEY_GRAVE, 0x00f9, Qt::Key_Ugrave, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
-    { KEY_GRAVE, 0x00a7, Qt::Key_section, Modifiers::ModShift, 0x00, 0x0000 },
 
     { KEY_LEFTSHIFT, 0xffff, 0x01000020, 0x00, 0x04, 0x0001 },
 
@@ -484,39 +479,64 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
 
 constexpr static size_t keymapSize = sizeof(keymap) / sizeof(keymap[0]);
 
-#include <tuple>
-
-// Letters ì, é, è, ò, ç, à and ù are printed in uppercase only on caps lock (not shift).
-static constexpr std::pair<quint16, quint16> capsLockException[] = {
+static constexpr EpaperEvdevKeyboardMap::CapsLockException capsLockException[] = {
+    // KEY_EQUAL (13)
     // "ì" Latin Small Letter I with Grave 0x00ec
-    // "ì" Latin Capital Letter I with Grave 0x00cc
-    {0x00ec, 0x00cc},
+    // "Ì" Latin Capital Letter I with Grave 0x00cc
+    // "^" Combining Circumflex Accent 0x0302 (Dead Key)
+    { KEY_EQUAL,
+      { 0x00ec, Qt::Key_Igrave, false },
+      { 0x00cc, Qt::Key_Igrave, false },
+      { 0x0032, Qt::Key_Dead_Circumflex, true },
+      { 0x0032, Qt::Key_Dead_Circumflex, true },
+    },
 
+    // KEY_LEFTBRACE (26)
     // "é" Latin Small Letter E with Acute 0x00e9
     // "É" Latin Capital Letter E with Acute 0x00c9
-    {0x00e9, 0x00c9},
-
     // "è" Latin Small Letter E with Grave 0x00e8
     // "È" Latin Capital Letter E with Grave 0x00c8
-    {0x00e8, 0x00c8},
+    { KEY_LEFTBRACE,
+      { 0x00e9, Qt::Key_Eacute, false },
+      { 0x00c9, Qt::Key_Eacute, false },
+      { 0x00e8, Qt::Key_Egrave, false },
+      { 0x00c8, Qt::Key_Egrave, false },
+    },
 
+    // KEY_SEMICOLON (39)
     // "ò" Latin Small Letter O with Grave 0x00f2
-    // "ò" Latin Capital Letter O with Grave 0x00d2
-    {0x00f2, 0x00d2},
-
+    // "Ò" Latin Capital Letter O with Grave 0x00d2
     // "ç" Latin Small Letter C with Cedilla 0x00e7
     // "Ç" Latin Capital Letter C with Cedilla 0x00c7
-    {0x00e7, 0x00c7},
+    { KEY_SEMICOLON,
+      { 0x00f2, Qt::Key_Ograve, false },
+      { 0x00d2, Qt::Key_Ograve, false },
+      { 0x00e7, Qt::Key_Ccedilla, false },
+      { 0x00c7, Qt::Key_Ccedilla, false },
+    },
 
+    // KEY_APOSTROPHE (40)
     // "à" Latin Small Letter a with Grave 0x00e0
     // "À" Latin Capital Letter a with Grave 0x00c0
-    {0x00e0, 0x00c0},
+    // "º" Masculine Ordinal Indicator 0x00ba
+    { KEY_APOSTROPHE,
+      { 0x00e0, Qt::Key_Agrave, false },
+      { 0x00c0, Qt::Key_Agrave, false },
+      { 0x00ba, Qt::Key_masculine, false },
+      { 0x00ba, Qt::Key_masculine, false },
+    },
 
+    // KEY_GRAVE (41)
     // "ù" Latin Small Letter U with Grave 0x00f9
     // "Ù" Latin Capital Letter U with Grave 0x00d9
-    {0x00f9, 0x00d9},
+    // "§" Section Sign 0x00a7
+    { KEY_GRAVE,
+      { 0x00f9, Qt::Key_Ugrave, false },
+      { 0x00d9, Qt::Key_Ugrave, false },
+      { 0x00a7, Qt::Key_section, false },
+      { 0x00a7, Qt::Key_section, false },
+    },
 };
-
 };
 
 } // namespace Locale
