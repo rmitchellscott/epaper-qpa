@@ -44,7 +44,8 @@ public:
 
     bool m_hasPalm = false;
     bool m_touchActive = false;
-    QHash<int, Contact> m_contacts; // The key is a slot number for type B. Type A is unsupported.
+    QHash<int, Contact> m_contacts;     // The key is a slot number for type B. Type A is unsupported.
+    QHash<int, Contact> m_lastContacts; // the same, but from the previous frame.
     Contact m_currentData;
     int m_currentSlot;
 

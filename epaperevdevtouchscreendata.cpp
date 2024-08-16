@@ -255,11 +255,45 @@ void EpaperEvdevTouchScreenData::reportPoints()
         }
     }
 
-    // TODO: it would be nice to consider how we can guard against some insanity here...
+    const auto reportTouchDebug = [&painter, &touchDebug, &winRect](const QWindowSystemInterface::TouchPoint& tp,
+                                                                    const Contact& contact,
+                                                                    const QString& fmt) {
+        if (!touchDebug) {
+            return;
+        }
+
+        // I don't really care about the case of multiple screens here. If it's ever an issue this needs fixing.
+        Q_ASSERT(winRect.topLeft() == QPoint(0, 0));
+        painter->fillRect(tp.area, QColor(contact.debugPointColor));
+        painter->drawText(tp.area.bottomRight(), fmt.arg(tp.id));
+    };
+
+    QList<QWindowSystemInterface::TouchPoint> touchPoints;
+
+    // First we must look for contacts that are inconsistent from the last sync.
+    // TODO: it would be nice to consider how we can guard against some additional insanity here...
     // an example might be getting a release for a not-yet-pressed point.
     // stuff like this probably points to a kernel problem, but would be useful to
     // guard userspace from them if we can.
-    QList<QWindowSystemInterface::TouchPoint> touchPoints;
+    for (auto it = m_lastContacts.begin(), end = m_lastContacts.end(); it != end; ++it) {
+        Contact& contact(it.value());
+        int key = it.key();
+
+        // If the contact was active, but now changed tracking ID, it's gone while we weren't looking.
+        // Fake a release so we report the new state of the contact properly below.
+        if (contact.trackingId != m_contacts[key].trackingId && contact.state) {
+            // We only need to do this for fingers, as palms aren't reported as touch points anyway.
+            if (contact.type != Contact::Type::Palm) {
+                contact.state = QEventPoint::State::Released;
+                const auto& lostTp = makeTouchPoint(contact);
+                qCWarning(epaperLcTouchScreenDataEvents)
+                    << "Lost contact" << lostTp << contact.trackingId << m_contacts[key].trackingId;
+                reportTouchDebug(lostTp, contact, "TL: %1");
+                touchPoints.append(lostTp);
+            }
+        }
+    }
+
     for (auto it = m_contacts.begin(), end = m_contacts.end(); it != end; ++it) {
         Contact& contact(it.value());
         const auto& tp = makeTouchPoint(contact);
@@ -268,16 +302,7 @@ void EpaperEvdevTouchScreenData::reportPoints()
             continue;
         }
 
-        if (touchDebug) {
-            // I don't really care about the case of multiple screens here. If it's ever an issue this needs fixing.
-            Q_ASSERT(winRect.topLeft() == QPoint(0, 0));
-            painter->fillRect(tp.area, QColor(contact.debugPointColor));
-            if (tp.state == QEventPoint::Pressed) {
-                painter->drawText(tp.area.bottomRight(), QString::fromLatin1("TD: %1").arg(tp.id));
-            } else if (tp.state == QEventPoint::Released) {
-                painter->drawText(tp.area.bottomRight(), QString::fromLatin1("TU: %1").arg(tp.id));
-            }
-        }
+        reportTouchDebug(tp, contact, tp.state == QEventPoint::Pressed ? "TD: %1" : "TU: %1");
 
         if (contact.type == Contact::Type::Palm) {
             hasPalm = true;
@@ -298,6 +323,8 @@ void EpaperEvdevTouchScreenData::reportPoints()
             contact.state = QEventPoint::State::Stationary;
         }
     }
+
+    m_lastContacts = m_contacts;
 
     if (touchDebug) {
         // We throttle the save so it doesn't happen too often...
