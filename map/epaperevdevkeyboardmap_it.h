@@ -192,8 +192,8 @@ constexpr static EpaperEvdevKeyboardMap::Mapping keymap[] = {
 
     // KEY_LEFTBRACE (26)
     // Additional mapping under capsLockException
-    // "é" Latin Small Letter E with Acute 0x00e9
-    { KEY_LEFTBRACE, 0x00e9, Qt::Key_Eacute, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
+    // "è" Latin Small Letter E with Grave 0x00e8
+    { KEY_LEFTBRACE, 0x00e8, Qt::Key_Egrave, Modifiers::ModPlain, Flags::IsCapsLockException, 0x0000 },
 
     // KEY_RIGHTBRACE (27)
     // "+" Plus Sign 0x002b
@@ -492,15 +492,15 @@ static constexpr EpaperEvdevKeyboardMap::CapsLockException capsLockException[] =
     },
 
     // KEY_LEFTBRACE (26)
-    // "é" Latin Small Letter E with Acute 0x00e9
-    // "É" Latin Capital Letter E with Acute 0x00c9
     // "è" Latin Small Letter E with Grave 0x00e8
     // "È" Latin Capital Letter E with Grave 0x00c8
+    // "é" Latin Small Letter E with Acute 0x00e9
+    // "É" Latin Capital Letter E with Acute 0x00c9
     { KEY_LEFTBRACE,
-      { 0x00e9, Qt::Key_Eacute, false },
-      { 0x00c9, Qt::Key_Eacute, false },
       { 0x00e8, Qt::Key_Egrave, false },
       { 0x00c8, Qt::Key_Egrave, false },
+      { 0x00e9, Qt::Key_Eacute, false },
+      { 0x00c9, Qt::Key_Eacute, false },
     },
 
     // KEY_SEMICOLON (39)
