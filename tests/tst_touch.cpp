@@ -470,6 +470,49 @@ Event: time 1715672945.423703, -------------- SYN_REPORT ------------
                                   .pressure(1.0)
                                   .build()},
            };
+
+    // Single point press, with a missing release.
+    QTest::addRow("ferrari-finger-press-missing-release")
+        << TouchStreamBuilder::fromEvtestOutput(
+               R"(
+Event: time 1715672926.094343, type 3 (EV_ABS), code 57 (ABS_MT_TRACKING_ID), value 3311
+Event: time 1715672926.094343, type 3 (EV_ABS), code 53 (ABS_MT_POSITION_X), value 563
+Event: time 1715672926.094343, type 3 (EV_ABS), code 54 (ABS_MT_POSITION_Y), value 690
+Event: time 1715672926.094343, type 3 (EV_ABS), code 48 (ABS_MT_TOUCH_MAJOR), value 12
+Event: time 1715672926.094343, type 1 (EV_KEY), code 330 (BTN_TOUCH), value 1
+Event: time 1715672927.460751, -------------- SYN_REPORT ------------
+Event: time 1715672928.513793, type 3 (EV_ABS), code 57 (ABS_MT_TRACKING_ID), value 3312
+Event: time 1715672928.513793, type 3 (EV_ABS), code 53 (ABS_MT_POSITION_X), value 1488
+Event: time 1715672928.513793, type 3 (EV_ABS), code 54 (ABS_MT_POSITION_Y), value 1465
+Event: time 1715672928.513793, type 3 (EV_ABS), code 48 (ABS_MT_TOUCH_MAJOR), value 12
+Event: time 1715672945.423703, -------------- SYN_REPORT ------------
+)")
+        << QList<TouchTestEvent>{TouchTestEvent{TouchPointBuilder()
+                                                    .id(3311)
+                                                    .area({436.984, 521.395, 9.26471, 9.26471})
+                                                    .normalPosition({0.272771, 0.243644})
+                                                    .state(QEventPoint::State::Pressed)
+                                                    .appendRawPosition({563, 690})
+                                                    .pressure(1.0)
+                                                    .build()},
+                                 TouchTestEvent{QList<QWindowSystemInterface::TouchPoint>{
+                                     {TouchPointBuilder()
+                                          .id(3311)
+                                          .area({436.984, 521.395, 9.26471, 9.26471})
+                                          .normalPosition({0.272771, 0.243644})
+                                          .state(QEventPoint::State::Released)
+                                          .appendRawPosition({563, 690})
+                                          .pressure(0.0)
+                                          .build()},
+                                     {TouchPointBuilder()
+                                          .id(3312)
+                                          .area({1162.55, 1112.22, 9.26471, 9.26471})
+                                          .normalPosition({0.72093, 0.517302})
+                                          .state(QEventPoint::State::Pressed)
+                                          .appendRawPosition({1488, 1465})
+                                          .pressure(1.0)
+                                          .build()},
+                                 }}};
 }
 
 void TouchTest::test()
