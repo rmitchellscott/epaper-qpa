@@ -69,7 +69,7 @@ EpaperEvdevKeyboardManager::EpaperEvdevKeyboardManager(const QString &key, const
         addKeyboard(device);
 
     // add hall sensor
-    addKeyboard("/dev/input/event1");
+    addKeyboard("/dev/input/by-path/platform-gpio-hall-sensors-event");
 
     if (parsed.devices.isEmpty()) {
         qCDebug(qLcEvdevKey, "evdevkeyboard: Using device discovery");
