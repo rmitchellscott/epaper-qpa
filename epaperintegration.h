@@ -84,6 +84,8 @@ public:
     QPlatformNativeInterface *nativeInterface() const override;
     QFunctionPointer platformFunction(const QByteArray &function) const override;
     void setCapsLockEnabled(bool enabled);
+    QStringList themeNames() const override;
+    QPlatformTheme* createPlatformTheme(const QString& name) const override;
 
     static EpaperIntegration *instance();
 

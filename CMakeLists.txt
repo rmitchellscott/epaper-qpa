@@ -16,7 +16,9 @@ qt_add_plugin(epaper SHARED
     epaperintegration.cpp
     epaperbackingstore.cpp
     epaperevdevkeyboardhandler.cpp
-    epaperevdevkeyboardmanager.cpp)
+    epaperevdevkeyboardmanager.cpp
+    epaperplatformtheme.cpp
+)
 
 target_link_libraries(epaper PRIVATE
     Qt::CorePrivate
