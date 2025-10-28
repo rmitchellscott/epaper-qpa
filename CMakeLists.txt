@@ -18,11 +18,12 @@ add_library(epaper
     epaperbackingstore.cpp
     epaperevdevkeyboardhandler.cpp
     epaperevdevkeyboardmanager.cpp
-    epaperevdevtouchscreendata.cpp
     epaperevdevtouchhandler.cpp
     epaperevdevtouchmanager.cpp
+    epaperevdevtouchscreendata.cpp
     epaperevdevutil.cpp
     epaperintegration.cpp
+    epaperplatformtheme.cpp
     main.cpp
 
     epaperbackingstore.h
@@ -33,6 +34,7 @@ add_library(epaper
     epaperevdevtouchscreendata.h
     epaperevdevutil.h
     epaperintegration.h
+    epaperplatformtheme.h
 
     map/epaperevdevkeyboardmap_de.h
     map/epaperevdevkeyboardmap_dk.h

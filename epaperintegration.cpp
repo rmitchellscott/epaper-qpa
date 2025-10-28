@@ -35,6 +35,7 @@
 #include "epaperbackingstore.h"
 #include "epaperevdevkeyboardmanager.h"
 #include "epaperevdevtouchmanager.h"
+#include "epaperplatformtheme.h"
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/private/qpixmap_raster_p.h>
@@ -145,6 +146,19 @@ QFunctionPointer EpaperIntegration::platformFunction(const QByteArray &function)
         return QFunctionPointer(seabirdSetInputFlavorApple);
     }
 
+    return nullptr;
+}
+
+QStringList EpaperIntegration::themeNames() const
+{
+    return {"remarkable"};
+}
+
+QPlatformTheme* EpaperIntegration::createPlatformTheme(const QString& name) const
+{
+    if (name == "remarkable") {
+        return new EpaperPlatformTheme;
+    }
     return nullptr;
 }
 
