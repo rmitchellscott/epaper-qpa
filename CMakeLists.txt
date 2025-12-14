@@ -3,7 +3,13 @@ project(epaper)
 
 include(FeatureSummary)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Test DeviceDiscoverySupportPrivate InputSupportPrivate)
+find_package(QT NAMES Qt6 COMPONENTS Core REQUIRED HINTS $ENV{Qt6_DIR})
+if (QT_VERSION VERSION_LESS 6.10)
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui Test DeviceDiscoverySupportPrivate InputSupportPrivate)
+else ()
+    find_package(Qt6 REQUIRED COMPONENTS Core Gui Test DeviceDiscoverySupportPrivate InputSupportPrivate GuiPrivate)
+endif ()
+
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
