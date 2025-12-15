@@ -48,6 +48,7 @@
 #include <QLoggingCategory>
 #include <QSocketNotifier>
 #include <QStringList>
+#include <QSettings>
 #include <private/qcore_unix_p.h>
 #include <qpa/qplatforminputcontext.h>
 #include <qpa/qplatformintegration.h>
