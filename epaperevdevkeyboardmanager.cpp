@@ -49,7 +49,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_LOGGING_CATEGORY(qLcEvdevKey)
+Q_LOGGING_CATEGORY(qLcEvdevKey, "qt.qpa.input")
 
 EpaperEvdevKeyboardManager::EpaperEvdevKeyboardManager(const QString &key, const QString &specification, QObject *parent) :
     QObject(parent)
