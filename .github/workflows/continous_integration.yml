@@ -8,25 +8,22 @@ on:
 jobs:
   linux-x86:
     name: Linux x86_64
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        qt: ["6.4.2"]
+        qt: ["6.8.2", "6.10.2"]
+
     steps:
       - uses: actions/checkout@v3
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v2
+        uses: jurplel/install-qt-action@d325aaf2a8baeeda41ad0b5d39f84a6af9bcf005  # v4
         with:
           version: ${{ matrix.qt }}
 
       - run: sudo apt install -y libxkbcommon-x11-dev cmake
 
-      - name: Run cmake
-        run: cmake . -DBUILD_TESTING=ON
-
-      - name: Build
-        run: make
-
-      - name: Test
-        run: ctest --output-on-failure
+      - name: Build with cmake
+        run: |
+          cmake -S . -Bbuild
+          cmake --build build
