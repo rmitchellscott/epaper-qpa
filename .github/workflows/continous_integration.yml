@@ -8,33 +8,22 @@ on:
 jobs:
   linux-x86:
     name: Linux x86_64
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        qt: ["5.15.2", "6.5.2"]
-        buildsystem: ["qmake"]
-        include:
-          - qt: "6.5.2"
-            buildsystem: "cmake"
+        qt: ["6.8.2", "6.10.2"]
 
     steps:
       - uses: actions/checkout@v3
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v2
+        uses: jurplel/install-qt-action@d325aaf2a8baeeda41ad0b5d39f84a6af9bcf005  # v4
         with:
           version: ${{ matrix.qt }}
 
       - run: sudo apt install -y libxkbcommon-x11-dev
 
-      - name: Build with qmake
-        if: matrix.buildsystem == 'qmake'
-        run: |
-          qmake
-          make
-
       - name: Build with cmake
-        if: matrix.buildsystem == 'cmake'
         run: |
           cmake -S . -Bbuild
           cmake --build build
