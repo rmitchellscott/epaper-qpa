@@ -21,9 +21,6 @@ EpaperEvdevTouchManager::EpaperEvdevTouchManager(const QString &key, const QStri
 {
     Q_UNUSED(key);
 
-    if (qEnvironmentVariableIsSet("QT_QPA_EVDEV_DEBUG"))
-        const_cast<QLoggingCategory &>(epaperLcEvdevTouch()).setEnabled(QtDebugMsg, true);
-
     QString spec = QString::fromLocal8Bit(qgetenv("QT_QPA_EVDEV_TOUCHSCREEN_PARAMETERS"));
 
     if (spec.isEmpty())
