@@ -175,7 +175,7 @@ EpaperEvdevTouchScreenHandler::EpaperEvdevTouchScreenHandler(const QString &devi
     d->m_screenGeometry = screen ? QHighDpi::toNativePixels(screen->geometry(), screen) : QRect();
 
     // For the benefit of helping write test scenarios.
-    const bool dumpDataParameters = true;
+    const bool dumpDataParameters = false;
     if (dumpDataParameters) {
         qWarning(epaperLcEvdevTouch) << "xmin" << d->hw_range_x_min;
         qWarning(epaperLcEvdevTouch) << "xmax" << d->hw_range_x_max;
