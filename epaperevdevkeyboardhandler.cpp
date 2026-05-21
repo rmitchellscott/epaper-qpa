@@ -89,7 +89,7 @@ std::optional<EpaperEvdevInputLocale> determineKeymapFirmware()
     QFile file(sysfsLangFile);
     if (!file.open(QIODevice::ReadOnly)) {
         // No keyboard attached means we fall back to the (unaltered) US keymap.
-        qCWarning(EpaperEvdevKeyboardLog) << "Failed to open pogo lang status: " << file.errorString();
+        qCDebug(EpaperEvdevKeyboardLog) << "Failed to open pogo lang status: " << file.errorString();
         return {};
     }
 
@@ -712,7 +712,7 @@ void EpaperEvdevKeyboardHandler::resetKeymap()
         qCDebug(EpaperEvdevKeyboardLog) << "Keymap has been determined by the firmware settings.";
         keymap = keymapOpt.value();
     } else {
-        qCWarning(EpaperEvdevKeyboardLog) << "No keymap set by QT settings or firmware, defaulting to US.";
+        qCDebug(EpaperEvdevKeyboardLog) << "No keymap set by QT settings or firmware, defaulting to US.";
     }
     m_prevLocale = keymap;
     m_capsLockException.clear();
