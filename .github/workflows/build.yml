@@ -1,0 +1,32 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - "**"
+
+jobs:
+  linux-aarch64:
+    name: Linux aarch64 (reMarkable Paper Pro)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build with remarkable toolchain
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/build eeems/remarkable-toolchain:latest-rmpp bash -c "
+            cd /build &&
+            . /opt/codex/*/*/environment-setup-* &&
+            mkdir -p build-aarch64 &&
+            cd build-aarch64 &&
+            cmake .. &&
+            make -j\$(nproc) &&
+            aarch64-remarkable-linux-strip libepaper.so
+          "
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: libepaper-aarch64
+          path: build-aarch64/libepaper.so

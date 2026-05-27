@@ -264,10 +264,12 @@ private:
 
     template <typename LocaleType>
     void populateKeymap();
+    void applyExternalKeyboardFixups();
 
     QString m_device;
     EpaperEvdevFdContainer m_fd;
     QSocketNotifier *m_notify;
+    bool m_isTypeFolio = true;
 
     // keymap handling
     quint16 m_modifiers;

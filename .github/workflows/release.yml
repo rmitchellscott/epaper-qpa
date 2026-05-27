@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build with remarkable toolchain
+        run: |
+          docker run --rm -v ${{ github.workspace }}:/build eeems/remarkable-toolchain:latest-rmpp bash -c "
+            cd /build &&
+            . /opt/codex/*/*/environment-setup-* &&
+            mkdir -p build-aarch64 &&
+            cd build-aarch64 &&
+            cmake .. &&
+            make -j\$(nproc) &&
+            aarch64-remarkable-linux-strip libepaper.so
+          "
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build-aarch64/libepaper.so
+          generate_release_notes: true

@@ -232,7 +232,23 @@ std::unique_ptr<EpaperEvdevKeyboardHandler> EpaperEvdevKeyboardHandler::create(c
             ::ioctl(fd.get(), EVIOCSREP, kbdrep);
         }
 
-        return std::unique_ptr<EpaperEvdevKeyboardHandler>(new EpaperEvdevKeyboardHandler(device, fd, disableZap));
+        char deviceName[256] = {0};
+        bool isTypeFolio = false;
+        if (::ioctl(fd.get(), EVIOCGNAME(sizeof(deviceName)), deviceName) >= 0) {
+            QString name = QString::fromUtf8(deviceName);
+            isTypeFolio = name.contains(QLatin1String("rM_Keyboard"), Qt::CaseInsensitive)
+                || name.contains(QLatin1String("rm_hwmon_keyboard"), Qt::CaseInsensitive);
+            qCDebug(EpaperEvdevKeyboardLog, "Keyboard device name: \"%s\" (Type Folio: %s)",
+                    deviceName, isTypeFolio ? "yes" : "no");
+        }
+
+        auto handler = std::unique_ptr<EpaperEvdevKeyboardHandler>(
+            new EpaperEvdevKeyboardHandler(device, fd, disableZap));
+        if (!isTypeFolio) {
+            handler->m_isTypeFolio = false;
+            handler->resetKeymap();
+        }
+        return handler;
     } else {
         qErrnoWarning("Cannot open keyboard input device '%ls'", qUtf16Printable(device));
         return nullptr;
@@ -697,6 +713,62 @@ EpaperEvdevKeyboardHandler::KeycodeAction EpaperEvdevKeyboardHandler::processKey
 #include "map/epaperevdevkeyboardmap_uk.h"
 #include "map/epaperevdevkeyboardmap_us_rm.h"
 
+void EpaperEvdevKeyboardHandler::applyExternalKeyboardFixups()
+{
+    using namespace EpaperEvdevKeyboardMap;
+
+    auto replace = [this](quint16 keycode, quint16 modifiers, Mapping replacement) {
+        for (int i = 0; i < m_keymap_size; ++i) {
+            if (m_keymap[i].keycode == keycode && m_keymap[i].modifiers == modifiers) {
+                m_keymap[i] = replacement;
+                return;
+            }
+        }
+    };
+
+    auto remove = [this](quint16 keycode, quint16 modifiers) {
+        for (int i = 0; i < m_keymap_size; ++i) {
+            if (m_keymap[i].keycode == keycode && m_keymap[i].modifiers == modifiers) {
+                std::copy(m_keymap + i + 1, m_keymap + m_keymap_size, m_keymap + i);
+                --m_keymap_size;
+                return;
+            }
+        }
+    };
+
+    // KEY_END: restore as End key instead of Meta modifier (all locales)
+    replace(KEY_END, Modifiers::ModPlain,
+            { KEY_END, 0xffff, Qt::Key_End, Modifiers::ModPlain, 0x00, 0x0000 });
+
+    // Remove Ctrl+Alt+Arrow system console switching (all locales)
+    remove(KEY_LEFT, Modifiers::ModControl | Modifiers::ModAlt);
+    remove(KEY_RIGHT, Modifiers::ModControl | Modifiers::ModAlt);
+
+    // US-specific: the Type Folio remaps brackets and grave to dead keys
+    if (m_prevLocale == EpaperEvdevInputLocale::UnitedStates) {
+        replace(KEY_LEFTBRACE, Modifiers::ModPlain,
+                { KEY_LEFTBRACE, 0x005b, Qt::Key_BracketLeft, Modifiers::ModPlain, 0x00, 0x0000 });
+        replace(KEY_LEFTBRACE, Modifiers::ModShift,
+                { KEY_LEFTBRACE, 0x007b, Qt::Key_BraceLeft, Modifiers::ModShift, 0x00, 0x0000 });
+
+        replace(KEY_RIGHTBRACE, Modifiers::ModPlain,
+                { KEY_RIGHTBRACE, 0x005d, Qt::Key_BracketRight, Modifiers::ModPlain, 0x00, 0x0000 });
+        replace(KEY_RIGHTBRACE, Modifiers::ModShift,
+                { KEY_RIGHTBRACE, 0x007d, Qt::Key_BraceRight, Modifiers::ModShift, 0x00, 0x0000 });
+
+        replace(KEY_GRAVE, Modifiers::ModPlain,
+                { KEY_GRAVE, 0x0060, Qt::Key_QuoteLeft, Modifiers::ModPlain, 0x00, 0x0000 });
+        for (int i = 0; i < m_keymap_size; ++i) {
+            if (m_keymap[i].keycode == KEY_GRAVE && m_keymap[i].modifiers == Modifiers::ModShift) {
+                m_keymap[i] = { KEY_GRAVE, 0x007e, Qt::Key_AsciiTilde, Modifiers::ModShift, 0x00, 0x0000 };
+                break;
+            }
+        }
+    }
+
+    qCDebug(EpaperEvdevKeyboardLog) << "Applied external keyboard fixups";
+}
+
 void EpaperEvdevKeyboardHandler::resetKeymap()
 {
     QSettings settings;
@@ -764,6 +836,9 @@ void EpaperEvdevKeyboardHandler::resetKeymap()
     default:
         qCWarning(EpaperEvdevKeyboardLog) << "setting *no* keymap! uh oh!";
     }
+
+    if (!m_isTypeFolio)
+        applyExternalKeyboardFixups();
 
     // reset state, so we could switch keymaps at runtime
     m_modifiers = 0;
